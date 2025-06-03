@@ -1,0 +1,28 @@
+sprint-planner/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── UserForm.vue        # Форма добавления участника
+│   │   ├── UserList.vue        # Список текущих участников
+│   │   ├── TaskForm.vue        # Форма добавления задачи
+│   │   ├── TaskList.vue        # Список задач
+│   │   └── SprintChart.vue     # График
+│   ├── store/
+│   │   └── usePlannerStore.js  # Pinia store: users, tasks -- временное хранилище для MVP
+│   ├── App.vue
+│   └── main.js
+│
+│── backend/
+│   	├── main.go		# Сборка Fiber-приложения, запуск сервера
+│  	├── db/
+│   	│   └── db.go 		# Инициализация подключения к PostgreSQL
+│   	├── handlers/
+│   	│   ├── users.go	# CRUD-обработчики
+│   	│   └── tasks.go
+│   	├── models/
+│   	│   ├── user.go 	# Определим структуру User
+│   	│   └── task.go		# Определим структуру Task
+│	└── go.mod
+├── index.html
+├── package.json
+└── vite.config.js
