@@ -6,6 +6,4 @@ type Task struct {
 	UserID    int    `json:"user_id"`    //ID исполнителя
 	StartDate string `json:"start_date"` //Дата начала
 	Deadline  string `json:"deadline"`   //Дата дедлайн
-	/* Поля json:"..." позволяют Fiber автоматически сериализовать
-	и десериализовать JSON */
 }
