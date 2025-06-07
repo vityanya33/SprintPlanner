@@ -14,28 +14,36 @@ import (
 func main() {
 	// Инициализируем БД
 	if err := db.InitDB(); err != nil {
-		log.Fatalf("❌ Ошибка подключения к базе данных: %v", err)
+		log.Fatalf("❌ Failed to connect to DB: %v", err)
 	}
 
 	//Подгружаю из env
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("⚠️ .env не найден, продолжаем без него")
+		log.Println("⚠️ .env doesnt found")
 	}
 
 	app := fiber.New()
 	// Разрешаем доступ с фронта (CORS)
 	app.Use(cors.New())
 
+	//Запросы по пользователям
 	app.Get("/users", handlers.GetUsers)
+	app.Get("/users/:id", handlers.GetUserByID)
+	app.Post("/users", handlers.PostUsers)
+	app.Delete("/users/:id", handlers.DeleteUsers)
+	app.Patch("/users/:id", handlers.PatchUsers)
 
-	// Простой роут 2
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Backend работает и подключён к БД 🎯")
-	})
+	//Запросы по задачам
+	app.Get("/tasks", handlers.GetTasks)
+	app.Get("/tasks/:id", handlers.GetTaskByID)
+	app.Post("/tasks", handlers.PostTasks)
+	app.Delete("/tasks/:id", handlers.DeleteTasks)
+	app.Patch("/tasks/:id", handlers.PatchTasks)
 
 	// Запуск сервера
 	if err := app.Listen(":3000"); err != nil {
 		panic(err)
 	}
+
 }

@@ -37,14 +37,14 @@ func InitDB() error {
 	//Инициализирует пул соединений к БД (объект pgxpool.pool)
 	pool, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
-		return fmt.Errorf("Ошибка подключения к БД: %w", err)
+		return fmt.Errorf("Error to connect to DB: %w", err)
 	}
 	//Пингует, чтобы понять можно ли подключиться
 	if err := pool.Ping(ctx); err != nil {
-		return fmt.Errorf("Не удалось подключиться к БД: %w", err)
+		return fmt.Errorf("Failed connection to DB: %w", err)
 	}
 
-	fmt.Println("✅ Подключено к PostgreSQL")
+	fmt.Println("✅Connected to PostgreSQL")
 
 	Pool = pool
 	return nil
