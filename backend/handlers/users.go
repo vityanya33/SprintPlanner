@@ -4,7 +4,6 @@ import (
 	"backend/db"
 	"backend/models"
 	"context"
-	"fmt"
 	"strconv"
 
 	//"strconv"
@@ -60,19 +59,21 @@ func GetUserByID(c *fiber.Ctx) error {
 func PatchUsers(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid id")
+	}
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.Status(fiber.StatusBadRequest).SendString("invalid body")
 	}
 
-	fmt.Println(user)
 	err = db.Pool.QueryRow(
 		context.Background(),
-		"UPDATE users set name = $1, role = $2 WHERE id = $3 RETURNING id, name, role",
+		"UPDATE users SET name = $1, role = $2 WHERE id = $3 RETURNING id, name, role",
 		user.Name, user.Role, id).Scan(&user.ID, &user.Name, &user.Role)
 
 	if err != nil {
-		return c.SendStatus(fiber.StatusNotFound)
+		return c.Status(fiber.StatusInternalServerError).SendString("DB update failed")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(user)

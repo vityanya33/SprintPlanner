@@ -4,7 +4,7 @@
 
     <div v-if="users.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
-          v-for="user in users"
+          v-for="user in props.users"
           :key="user.id"
           class="bg-white rounded-xl shadow p-4 border-l-4 border-blue-500 relative"
       >
@@ -36,37 +36,67 @@
 
 <script setup>
 import { ref } from 'vue'
-import { usePlannerStore } from '../store/usePlannerStore'
-import { storeToRefs } from 'pinia'
+import { updateUser, deleteUser} from '../api/users.js'
+//import axios from 'axios'
 
-const store = usePlannerStore()
-const { users }  = storeToRefs(store)
+//import { usePlannerStore } from '../store/usePlannerStore'
+//import { storeToRefs } from 'pinia'
+
+//для загрузки с Pinia
+//const store = usePlannerStore()
+//const { users }  = storeToRefs(store)
+
+const props = defineProps({
+  users: {
+    type: Array,
+    required: true,
+  }
+})
+const emit = defineEmits(['user-updated', "user-removed"])
 
 const editingId = ref(null)
 const editName = ref('')
 const editRole = ref('')
 
-const startEdit = (user) => {
-  editingId.value = user.id
-  editName.value = user.name
-  editRole.value = user.role
+//для изменения пользователей
+const startEdit = (u) => {
+  editingId.value = u.id
+  editName.value = u.name
+  editRole.value = u.role
 }
 
-const confirmEdit = (id) => {
-  store.updateUser(id, {
-    name: editName.value.trim(),
-    role: editRole.value.trim()
-  })
-  editingId.value = null
+const confirmEdit = async (id) => {
+  try {
+    await updateUser(id, {
+      name: editName.value.trim(),
+      role: editRole.value.trim()
+    })
+
+    //обновление локального списка
+    const user = props.users.find(u => u.id === id)
+    if (user) {
+      emit('user-updated', { id, name: editName.value.trim(), role: editRole.value.trim() })
+    }
+
+    editingId.value = null
+  } catch (err) {
+  console.log('Some problems with editing users: ', err)
+  }
 }
 
+//для отмены редактирования
 const cancelEdit = () => {
   editingId.value = null
 }
 
-const remove = (id) => {
-  if (confirm('Удалить участника и связанные задачи?')) {
-    store.removeUser(id)
+//для удаления пользователя
+const remove = async (id) => {
+  if (!confirm('Удалить пользователя? ')) return
+  try {
+    await deleteUser(id)
+    emit('user-removed', id)
+  } catch (err) {
+    console.log('Some problems with delete users: ', err)
   }
 }
 </script>

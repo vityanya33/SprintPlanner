@@ -4,7 +4,7 @@
     <div>
       <label class="block text-sm font-medium text-gray-600">Имя</label>
       <input
-          v-model="name"
+          v-model.trim="form.name"
           type="text"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
           placeholder="Иван Иванов"
@@ -14,7 +14,7 @@
     <div>
       <label class="block text-sm font-medium text-gray-600">Роль</label>
       <input
-          v-model="role"
+          v-model.trim="form.role"
           type="text"
           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
           placeholder="Разработчик, дизайнер и т.д."
@@ -30,18 +30,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { usePlannerStore } from '../store/usePlannerStore'
+import { reactive } from 'vue'
+import { createUser } from '../api/users.js'
+//import { usePlannerStore } from '../store/usePlannerStore'
+//const store = usePlannerStore()
+const emit = defineEmits(['user-added'])
 
-const store = usePlannerStore()
+const form = reactive({
+  name: '',
+  role: ''
+})
 
-const name = ref('')
-const role = ref('')
+const handleSubmit = async () => {
+  try {
+    const res = await createUser({
+      name: form.name,
+      role: form.role,
+    })
 
-const handleSubmit = () => {
-  if (!name.value.trim()) return
-  store.addUser({ name: name.value, role: role.value })
-  name.value = ''
-  role.value = ''
+    form.name = ''
+    form.role = ''
+    emit('user-added', res.data)
+
+  } catch (err) {
+    console.log(err)
+  }
 }
 </script>
