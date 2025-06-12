@@ -44,7 +44,7 @@ const handleUserAdded = (newUser) => {
 
 //обновить существующих
 const handleUserUpdated = (updatedUser) => {
-  const idx = users.value.findIndex(user.id === updatedUser.id)
+  const idx = users.value.findIndex(u => u.id === updatedUser.id)
   if (idx !== -1) users.value[idx] = updatedUser
 }
 
