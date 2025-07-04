@@ -1,92 +1,77 @@
 <template>
-  <div class="mt-10 bg-white rounded-xl shadow p-4 w-[95%] mx-auto overflow-x-auto">
+  <div class="mt-10 bg-white rounded-xl shadow p-4 w-[95%] mx-auto">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">График задач</h2>
-
-    <div v-if="users.length && tasks.length">
-      <div class="grid" :style="`grid-template-columns: 150px repeat(${dayCount}, 1fr);`">
-        <!-- Заголовки дней -->
-        <div class="font-semibold text-sm">Участник</div>
-        <div
-            v-for="(day, index) in days"
-            :key="index"
-            class="text-xs text-center text-gray-500 border-b border-gray-300 pb-1"
-        >
-          {{ formatDay(day) }}
-        </div>
-
-        <!-- Строки по каждому участнику -->
-        <template v-for="user in users" :key="user.id">
-          <div class="font-medium text-sm text-gray-800 border-t pt-2">{{ user.name }}</div>
-          <div
-              v-for="(day, index) in days"
-              :key="index"
-              class="h-6 border-t border-gray-200 relative"
-          >
-            <!-- Показываем задачу если на эту дату она у юзера -->
-            <div
-                v-for="task in getTasksForDay(user.id, day)"
-                :key="task.id"
-                class="absolute top-0 left-0 h-full w-full opacity-70 text-[10px] text-white flex items-center justify-center truncate rounded"
-                :style="{
-        //HSL метод генерации цвета, для упращения и максимальной уникальности цветов
-        backgroundColor: `hsl(${getTaskColor(task.id)}, 70%, 40%)`
-      }"
-            >
-              {{ task.title }}
-            </div>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <p v-else class="text-gray-500 italic">Добавьте участников и задачи для отображения графика</p>
+    <div ref="container" class="overflow-x-auto"></div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { usePlannerStore } from '../store/usePlannerStore'
-import { storeToRefs } from 'pinia'
+import { ref, onMounted, watch } from 'vue'
+import { Timeline } from 'vis-timeline/standalone'
+import { DataSet } from 'vis-data'
+import 'vis-timeline/styles/vis-timeline-graph2d.min.css'
 
-const store = usePlannerStore()
-const { users, tasks } = storeToRefs(store)
-
-const startDate = new Date() // по умолчанию — сегодня
-const sprintLength = 10 //определяет количество дней на графике
-
-const days = computed(() => {
-  const arr = []
-  for (let i = 0; i < sprintLength; i++) {
-    const d = new Date(startDate)
-    d.setDate(d.getDate() + i)
-    arr.push(d)
-  }
-  return arr
+const props = defineProps({
+  users: Array,
+  tasks: Array,
 })
 
-const dayCount = computed(() => days.value.length)
+const container = ref(null)
+let timeline = null
 
-const formatDay = (date) => {
-  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })
+onMounted(() => {
+  renderChart()
+})
+
+watch(() => props.tasks, renderChart, { deep: true })
+
+function renderChart() {
+  if (!container.value) return
+
+  // Группы это пользователям
+  const groups = props.users.map(user => ({
+    id: user.id,
+    content: user.name,
+  }))
+
+  // Элементы это задачи
+  const items = new DataSet(
+      props.tasks.map(task => {
+        const color = getRandomColor()
+        return {
+          id: task.id,
+          group: task.userId,
+          content: task.title,
+          start: task.startDate,
+          end: task.deadline,
+          style: `background-color: ${color}; color: white; border: none;`
+        }
+      })
+  )
+
+  const options = {
+    stack: false,
+    horizontalScroll: true,
+    zoomKey: 'ctrlKey',
+    min: new Date(),
+    margin: {
+      item: 20,
+      axis: 40,
+    },
+  }
+
+  if (timeline) {
+    timeline.setItems(items)
+    timeline.setGroups(groups)
+  } else {
+    timeline = new Timeline(container.value, items, groups, options)
+  }
 }
 
-const getTasksForDay = (userId, day) => {
-  return tasks.value.filter(task => {
-    if (task.userId !== userId) return false
-
-    const start = new Date(task.startDate)
-    const end = new Date(task.deadline)
-    //Нормализую дату для более правильного создания интервала для задачи
-    const normalize = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
-
-    return normalize(day) >= normalize(start) && normalize(day) <= normalize(end)
-
-  })
+//Функция создания рандомных цветов для колонок
+function getRandomColor() {
+  const clr = Math.floor(Math.random() * 360)
+  return `hsl(${clr}, 70%, 50%)`
 }
 
-  // Генерация цвета на основе ID пользователя
-const getTaskColor = (userId) => {
-  //угол распределения цвета диаграмм
-  return (parseInt(userId) * 137.508) % 360
-}
 </script>

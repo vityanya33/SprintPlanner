@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white p-4 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-64 overflow-y-auto custom-scrollbar">
+  <div class="bg-white p-4 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-62 overflow-y-auto custom-scrollbar">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Участники спринта</h2>
 
     <div v-if="users.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">

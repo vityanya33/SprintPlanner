@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white p-4 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-64 overflow-y-auto custom-scrollbar task">
+  <div class="bg-white p-4 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-93 overflow-y-auto custom-scrollbar task">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Задачи</h2>
 
-    <div v-if="tasks.length" class="space-y-4">
+    <div v-if="tasks.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
-          v-for="task in tasks"
+          v-for="task in props.tasks"
           :key="task.id"
           class="bg-white rounded-xl shadow p-4 border-l-4 border-green-500 relative"
       >
@@ -27,7 +27,7 @@
 
           <select v-model="editUserId" class="mb-2 w-full border rounded px-2 py-1">
             <option disabled value="">— Выберите участника —</option>
-            <option v-for="user in users" :key="user.id" :value="user.id">
+            <option v-for="user in props.users" :key="user.id" :value="user.id">
               {{ user.name }}
             </option>
           </select>
@@ -49,11 +49,25 @@
 
 <script setup>
 import { ref } from 'vue'
-import { usePlannerStore } from '../store/usePlannerStore'
-import { storeToRefs } from 'pinia'
+import { updateTask, deleteTask } from '../api/tasks.js'
 
-const store = usePlannerStore()
-const { tasks, users } = storeToRefs(store)
+// import { usePlannerStore } from '../store/usePlannerStore'
+// import { storeToRefs } from 'pinia'
+//
+// const store = usePlannerStore()
+// const { tasks, users } = storeToRefs(store)
+
+const props = defineProps({
+  tasks: {
+    type: Array,
+    required: true,
+  },
+  users: {
+    type: Array,
+    required: true,
+  }
+})
+const emit = defineEmits(['task-updated', 'task-removed'])
 
 const editingId = ref(null)
 const editTitle = ref('')
@@ -62,7 +76,7 @@ const editStartDate = ref('')
 const editDeadline = ref('')
 
 const getUserName = (id) => {
-  const user = users.value.find(u => u.id === id)
+  const user = props.users.find(u => u.id === id)
   return user ? user.name : '❌ Удалён'
 }
 
@@ -71,31 +85,50 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString('ru-RU')
 }
 
-const startEdit = (task) => {
-  editingId.value = task.id
-  editTitle.value = task.title
-  editUserId.value = task.userId ?? ''
-  editStartDate.value = task.startDate
-  editDeadline.value = task.deadline
+
+//Для изменения задач
+const startEdit = (t) => {
+  editingId.value = t.id
+  editTitle.value = t.title
+  editUserId.value = t.userId ?? ''
+  editStartDate.value = t.startDate
+  editDeadline.value = t.deadline
 }
 
-const confirmEdit = (id) => {
-  store.updateTask(id, {
-    title: editTitle.value,
-    userId: editUserId.value,
-    startDate: editStartDate.value,
-    deadline: editDeadline.value
-  })
-  editingId.value = null
+const confirmEdit = async (id) => {
+  try {
+    await updateTask(id, {
+      title: editTitle.value,
+      userId: editUserId.value,
+      startDate: editStartDate.value,
+      deadline: editDeadline.value
+    })
+
+    //обновление локального списка
+    const task = props.tasks.find(t => t.id === id)
+    if (task) {
+      emit('task-updated', { id, title: editTitle.value, userId: editUserId.value, startDate: editStartDate.value, deadline: editDeadline.value })}
+
+    editingId.value = null
+  } catch (err) {
+    console.log('Some problems with editing tasks: ', err)
+  }
 }
 
+//для отмены редактирования
 const cancelEdit = () => {
   editingId.value = null
 }
 
-const remove = (id) => {
-  if (confirm('Удалить задачу?')) {
-    store.removeTask(id)
+
+//для удаления задачи
+const remove = async(id) => {
+  if (!confirm('Удалить задачу?')) return
+  try {
+    await deleteTask(id)
+    emit('task-removed', id)
+  } catch (err) {
+    console.log('Some problems with delete tasks: ', err)
   }
 }
 </script>

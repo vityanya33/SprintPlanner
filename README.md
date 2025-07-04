@@ -28,6 +28,7 @@
 - **Frontend:** HTML, CSS, JavaScript (Vue.js)
 - **Backend:** Golang
 - **DB:** PostgreSQL
+- **Гибкие графики:** Vue-Echarts(Vue.js)
 ---
 
 ## ⚙️ Установка и запуск
