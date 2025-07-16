@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/tasks'
+// Использую переменную окружения, которую читает Vite
+const API_URL = import.meta.env.VITE_API_URL + '/tasks'
 
 export const getTasks = async () => await axios.get(API_URL)
 export const getTask = async (id) => await axios.get(`${API_URL}/${id}`)

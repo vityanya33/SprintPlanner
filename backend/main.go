@@ -40,9 +40,10 @@ func main() {
 	app.Post("/tasks", handlers.PostTasks)
 	app.Delete("/tasks/:id", handlers.DeleteTasks)
 	app.Patch("/tasks/:id", handlers.PatchTasks)
+    app.Static("/docs", "./docs")
 
 	// Запуск сервера
-	if err := app.Listen(":3000"); err != nil {
+	if err := app.Listen("0.0.0.0:3000"); err != nil {
 		panic(err)
 	}
 
