@@ -1,0 +1,321 @@
+openapi: 3.0.0
+
+info:
+  title: "Спецификация для СпринтПланнера"
+  version: '1.0.0'
+
+paths:
+  /users:
+    get:
+      summary: "Метод для получения списка пользователей"
+      description: "Метод выполняет запрос на вывод всех пользователей которые присутствуют в БД"
+      responses:
+        '200':
+          description: "Успешный ответ по запросу пользователей"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersList'
+        '404':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: "Метод для добавления пользователей"
+      description: "Метод выполняет запрос на добавление нового пользователя в БД"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: "Успешный ответ на добавление пользователя"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersList'
+        '404':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/:id :
+    get:
+      summary: "Метод для получения одного пользователя"
+      description: "Метод выполняет запрос на вывод пользователя по его ID который присутствует в БД"
+      responses:
+        '200':
+          description: "Успешный ответ по запросу пользователя"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOverview'
+        '404':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: "Метод для изменения пользователя"
+      description: "Метод выполняет запрос на изменение пользователя по его ID который присутствует в БД"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: "Успешный ответ по изменению пользователя"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOverview'
+        '500':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: "Метод для удаления пользователя"
+      description: "Метод выполняет запрос на удаление пользователя по его ID который присутствует в БД"
+      responses:
+        '200':
+          description: "Пользователь успешно удален"
+        '404':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks:
+    get:
+      summary: "Метод для получения списка задач"
+      description: "Метод выполняет запрос на вывод всех задач которые присутствуют в БД"
+      responses:
+        '200':
+          description: "Успешный ответ по запросу задач"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksList'
+        '500':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: "Метод для добавления новой задачи"
+      description: "Метод выполняет запрос на добавление новой задачи в БД"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '200':
+          description: "Задача успешно добавлена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksList'
+        '500':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/:id:
+    get:
+      summary: "Метод для получения задачи по ID"
+      description: "Метод выполняет запрос на получение задачи по её ID из БД"
+      responses:
+        '200':
+          description: "Успешный ответ по запросу задачи"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskOverview'
+        '404':
+          description: "Задача не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: "Метод для изменения задачи"
+      description: "Метод выполняет запрос на изменение задачи по её ID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '200':
+          description: "Задача успешно изменена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskOverview'
+        '500':
+          description: "Ошибка при изменении задачи"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: "Метод для удаления задачи"
+      description: "Метод выполняет запрос на удаление задачи по её ID"
+      responses:
+        '200':
+          description: "Задача успешно удалена"
+        '404':
+          description: "Задача не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    UsersOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Иван Иванов
+        role:
+          type: string
+          example: Фронтендер
+    UsersList:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 10
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsersOverview'
+    UserOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Иван Иванов
+        role:
+          type: string
+          example: Фронтендер
+    UserRequest:
+      type: object
+      required:
+        - name
+        - role
+      properties:
+        name:
+          type: string
+          example: Иван Иванов
+        role:
+          type: string
+          example: Фронтендер
+    TaskOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Создание бургер-меню для главной страницы
+        user_id:
+          type: integer
+          example: 1
+        start_date:
+          type: string
+          format: date
+          example: 2025-06-15
+        deadline:
+          type: string
+          format: date
+          example: 2025-07-15
+    TasksOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Создание бургер-меню для главной страницы
+        user_id:
+          type: integer
+          example: 1
+        start_date:
+          type: string
+          format: date
+          example: 2025-06-15
+        deadline:
+          type: string
+          format: date
+          example: 2025-07-15
+
+    TasksList:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 10
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TasksOverview'
+
+    TaskRequest:
+      type: object
+      required:
+        - title
+        - user_id
+        - start_date
+        - deadline
+      properties:
+        title:
+          type: string
+          example: Создание бургер-меню для главной страницы
+        user_id:
+          type: integer
+          example: 1
+        start_date:
+          type: string
+          format: date
+          example: 2025-06-15
+        deadline:
+          type: string
+          format: date
+          example: 2025-07-15
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: "Not found"
