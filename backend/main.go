@@ -27,6 +27,9 @@ func main() {
 	// Разрешаем доступ с фронта (CORS)
 	app.Use(cors.New())
 
+    //Запуск UI для openapi
+    app.Static("/", "./docs")
+
 	//Запросы по пользователям
 	app.Get("/users", handlers.GetUsers)
 	app.Get("/users/:id", handlers.GetUserByID)
@@ -40,7 +43,6 @@ func main() {
 	app.Post("/tasks", handlers.PostTasks)
 	app.Delete("/tasks/:id", handlers.DeleteTasks)
 	app.Patch("/tasks/:id", handlers.PatchTasks)
-    app.Static("/docs", "./docs")
 
 	// Запуск сервера
 	if err := app.Listen("0.0.0.0:3000"); err != nil {

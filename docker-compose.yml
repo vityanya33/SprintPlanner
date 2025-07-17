@@ -33,6 +33,8 @@ services:
     build: ./backend
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend/docs:/app/docs
     depends_on:
       - db
     env_file:
