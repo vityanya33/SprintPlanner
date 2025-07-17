@@ -1,0 +1,50 @@
+@startuml
+actor User
+participant "UserForm.vue" as UserForm
+participant "UserList.vue" as UserList
+participant "TaskForm.vue" as TaskForm
+participant "TaskList.vue" as TaskList
+participant "SprintChart.vue" as Chart
+participant "users.js / tasks.js (axios)" as API
+participant "Go Backend" as BE
+
+== Старт страницы ==
+
+User -> API : GET /users
+API --> UserList : список пользователей
+UserList -> Chart : построить группы
+
+User -> API : GET /tasks
+API --> TaskList : список задач
+TaskList -> Chart : построить задачи
+
+== Добавление пользователя ==
+
+User -> UserForm : вводит данные + Submit
+UserForm -> API : POST /users
+API -> BE : сохранить пользователя
+BE --> API : OK + пользователь
+API --> UserForm : создано
+UserForm -> UserList : обновить список
+UserList -> Chart : обновить группы
+
+== Добавление задачи ==
+
+User -> TaskForm : вводит данные + Submit
+TaskForm -> API : POST /tasks
+API -> BE : сохранить задачу
+BE --> API : OK + задача
+API --> TaskForm : создано
+TaskForm -> TaskList : обновить список
+TaskList -> Chart : обновить задачи
+
+== Удаление задачи ==
+
+User -> TaskList : нажимает удалить
+TaskList -> API : DELETE /tasks/:id
+API -> BE : удалить задачу
+BE --> API : OK
+API --> TaskList : подтверждение
+TaskList -> Chart : убрать задачу
+
+@enduml
