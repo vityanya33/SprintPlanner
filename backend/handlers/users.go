@@ -83,14 +83,24 @@ func PatchUsers(c *fiber.Ctx) error {
 func PostUsers(c *fiber.Ctx) error {
 	var user models.User
 	if err := c.BodyParser(&user); err != nil {
-		return err
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request body",
+		})
 	}
-	if err := db.Pool.QueryRow(
+
+	err := db.Pool.QueryRow(
 		context.Background(),
 		"INSERT INTO users (name, role) VALUES ($1, $2) RETURNING id",
-		user.Name, user.Role).Scan(&user.ID); err != nil {
-		return err
+		user.Name, user.Role,
+	).Scan(&user.ID)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "database error",
+			"info": err.Error(),
+		})
 	}
+
 	return c.Status(fiber.StatusCreated).JSON(user)
 }
 

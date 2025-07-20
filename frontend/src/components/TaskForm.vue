@@ -14,17 +14,19 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-600">Исполнитель</label>
-      <select
-          v-model="form.userId"
-          required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-      >
-        <option disabled value="">Выберите участника</option>
-        <option v-for="user in props.users" :key="user.id" :value="user.id">
-          {{ user.name }} ({{ user.role || 'Без роли' }})
-        </option>
-      </select>
+      <label class="block text-sm font-medium text-gray-600">Исполнители</label>
+      <Multiselect
+          v-model="form.userIds"
+          :options="props.users"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          placeholder="Выберите участника"
+          label="name"
+          track-by="id"
+          class="multiselect-control"
+      />
     </div>
 
     <div>
@@ -68,11 +70,10 @@ const emit = defineEmits(['task-added'])
 
 const form = reactive({
   title: '',
-  userId: '',
+  userIds: [],
   startDate: '',
   deadline: '',
 })
-
 
 
 const props = defineProps({
@@ -86,13 +87,13 @@ const handleSubmit = async () => {
   try {
     const res = await createTask({
       title: form.title,
-      userId: form.userId,
+      userIds: form.userIds.map(u => u.id),
       startDate: form.startDate,
       deadline: form.deadline,
     })
 
     form.title = ''
-    form.userId = ''
+    form.userIds = []
     form.startDate = ''
     form.deadline = ''
     emit('task-added', res.data)

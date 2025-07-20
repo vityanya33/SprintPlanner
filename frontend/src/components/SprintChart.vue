@@ -12,8 +12,14 @@ import { DataSet } from 'vis-data'
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css'
 
 const props = defineProps({
-  users: Array,
-  tasks: Array,
+  users: {
+    type: Array,
+    default: () => []
+  },
+  tasks: {
+    type: Array,
+    default: () => []
+  }
 })
 
 const container = ref(null)
@@ -28,32 +34,34 @@ watch(() => props.tasks, renderChart, { deep: true })
 function renderChart() {
   if (!container.value) return
 
-  // Группы это пользователям
+  // Группы — пользователи
   const groups = props.users.map(user => ({
     id: user.id,
     content: user.name,
   }))
 
-  // Элементы это задачи
-  const items = new DataSet(
-      props.tasks.map(task => {
-        const color = getRandomColor()
-        return {
-          id: task.id,
-          group: task.userId,
-          content: task.title,
-          start: task.startDate,
-          end: task.deadline,
-          style: `background-color: ${color}; color: white; border: none;`
-        }
+  // Элементы — задачи, распределённые по всем назначенным пользователям
+  const itemsArray = []
+  props.tasks.forEach(task => {
+    const color = getRandomColor()
+    task.userIds.forEach(userId => {
+      itemsArray.push({
+        id: `${task.id}-${userId}`, // уникальный ID (иначе конфликт)
+        group: userId,
+        content: task.title,
+        start: task.startDate,
+        end: task.deadline,
+        style: `background-color: ${color}; color: white; border: none;`
       })
-  )
+    })
+  })
+
+  const items = new DataSet(itemsArray)
 
   const options = {
     stack: false,
     horizontalScroll: true,
     zoomKey: 'ctrlKey',
-    min: new Date(),
     margin: {
       item: 20,
       axis: 40,

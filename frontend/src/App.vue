@@ -18,7 +18,7 @@
       />
     </div>
     <div>
-      <SprintChart :users="users" :tasks="tasks" />
+      <SprintChart :users="users || []" :tasks="tasks || []" />
     </div>
   </div>
 </template>
