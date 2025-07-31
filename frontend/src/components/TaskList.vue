@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white p-4 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-93 overflow-y-auto custom-scrollbar task">
+  <div class="form p-4 rounded-xl hover:scale-102 transition-transform duration-600 shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-93 overflow-y-auto custom-scrollbar task">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Задачи</h2>
 
     <div v-if="tasks && tasks.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -12,7 +12,8 @@
         <div v-if="editingId !== task.id">
           <h3 class="text-lg font-bold text-gray-800">{{ task.title }}</h3>
           <p class="text-sm text-gray-600">
-            👤 {{ getUserNames(task.userIds) }}<br />
+            👤 Участники: {{ getUserNames(task.userIds) }}<br />
+            ⏱️ Количество часов на выполнение: {{ task.hours }}<br />
             📅 Срок: {{ formatDate(task.startDate) }} - {{ formatDate(task.deadline) }}
           </p>
           <div class="absolute top-2 right-2 space-x-2">
@@ -25,6 +26,8 @@
         <div v-else>
           <input v-model="editTitle" class="mb-2 w-full border rounded px-2 py-1" />
 
+          <input v-model="editHours" type="number" class="mb-2 w-full border rounded px-2 py-1" />
+
           <select multiple v-model="editUserIds" class="mb-2 w-full border rounded px-2 py-1">
             <option v-for="user in props.users" :key="user.id" :value="user.id">
               {{ user.name }}
@@ -35,7 +38,7 @@
           <input v-model="editDeadline" type="date" class="mb-2 w-full border rounded px-2 py-1" />
 
           <div class="flex gap-2">
-            <button @click="confirmEdit(task.id)" class="bg-blue-500 text-white px-3 py-1 rounded">Сохранить</button>
+            <button @click="confirmEdit" class="bg-blue-500 text-white px-3 py-1 rounded">Сохранить</button>
             <button @click="cancelEdit" class="bg-gray-300 px-3 py-1 rounded">Отмена</button>
           </div>
         </div>
@@ -66,54 +69,70 @@ const props = defineProps({
     default: () => []
   }
 })
-const emit = defineEmits(['task-updated', 'task-removed'])
+const emit = defineEmits(['task-updated', 'task-removed', 'update-users'])
 
 const editingId = ref(null)
 const editTitle = ref('')
+const editHours = ref(null)
 const editUserIds = ref([])
 const editStartDate = ref('')
 const editDeadline = ref('')
 
 const getUserNames = (ids) => {
   if (!Array.isArray(ids)) return '—'
-
-  return ids
-      .map(id => {
+  return ids.map(id => {
         const user = props.users.find(u => u.id === id)
         return user ? user.name : '❌Удален'
       })
       .join(', ')
 }
 
-
 const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('ru-RU')
+  if (!dateStr || typeof dateStr !== 'string') return '—'
+
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return '—'
+
+  const [year, month, day] = parts.map(Number)
+  const date = new Date(year, month - 1, day)
+
+  if (isNaN(date.getTime())) return '—'
+
+  return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 
 //Для изменения задач
-const startEdit = (t) => {
-  editingId.value = t.id
-  editTitle.value = t.title
-  editUserIds.value = (t.userIds ?? []).map(Number)
-  editStartDate.value = t.startDate
-  editDeadline.value = t.deadline
+const startEdit = (task) => {
+  editingId.value = task.id
+  editTitle.value = task.title
+  editHours.value = task.hours
+  editUserIds.value = (task.userIds ?? []).map(Number)
+  editStartDate.value = task.startDate
+  editDeadline.value = task.deadline
 }
 
-const confirmEdit = async (id) => {
-  try {
-    await updateTask(id, {
-      title: editTitle.value,
-      userIds: editUserIds.value,
-      startDate: editStartDate.value,
-      deadline: editDeadline.value
-    })
+const confirmEdit = async () => {
+  const task = props.tasks.find(t => t.id === editingId.value)
+  if (!task) {
+    console.error('Не найдена задача с таким ID:', editingId.value)
+    return
+  }
 
-    //обновление локального списка
-    const task = props.tasks.find(t => t.id === id)
-    if (task) {
-      emit('task-updated', { id, title: editTitle.value, userIds: editUserIds.value, startDate: editStartDate.value, deadline: editDeadline.value })}
+  const updatedTask = {
+    id: editingId.value,
+    title: editTitle.value,
+    hours: editHours.value,
+    userIds: editUserIds.value,
+    startDate: editStartDate.value,
+    deadline: editDeadline.value
+  }
+
+  try {
+    await updateTask(editingId.value, updatedTask)
+
+    emit('task-updated', updatedTask)
+    emit('update-users')
 
     editingId.value = null
   } catch (err) {
@@ -126,7 +145,6 @@ const cancelEdit = () => {
   editingId.value = null
 }
 
-
 //для удаления задачи
 const remove = async(id) => {
   if (!confirm('Удалить задачу?')) return
@@ -138,3 +156,8 @@ const remove = async(id) => {
   }
 }
 </script>
+<style scoped>
+.form {
+  background-color: #D6F6DD;
+}
+</style>

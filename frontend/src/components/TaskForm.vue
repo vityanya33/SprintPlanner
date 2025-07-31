@@ -1,20 +1,20 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="bg-white h-full p-4 rounded-xl w-full shadow-md space-y-4 max-w-md mx-auto mt-10 ml-5">
+  <form @submit.prevent="handleSubmit" class="form h-full p-4 hover:scale-102 transition-transform duration-300 rounded-xl w-full shadow-md space-y-4 max-w-md mx-auto mt-10 ml-10">
     <h2 class="text-xl font-semibold text-gray-700">Добавить задачу</h2>
 
     <div>
-      <label class="block text-sm font-medium text-gray-600">Название задачи</label>
+      <label class="block text-sm font-bold text-gray-600">Название задачи</label>
       <input
           v-model="form.title"
           type="text"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-          placeholder="Например: Верстка лендинга"
+          class="bg-white p-2 mt-1 block w-full text- rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+          placeholder="Верстка главной страницы"
           required
       />
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-600">Исполнители</label>
+      <label class="block text-sm font-bold text-gray-600">Исполнители</label>
       <Multiselect
           v-model="form.userIds"
           :options="props.users"
@@ -30,36 +30,48 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-600">Дата начала</label>
+      <label class="block text-sm font-bold text-gray-600">Оценка в часах</label>
       <input
-          v-model="form.startDate"
-          type="date"
+          v-model="form.hours"
+          type="number"
+          min="1"
+          class="bg-white p-2 mt-1 block w-full text- rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+          placeholder="10"
           required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
       />
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-gray-600">Срок (дедлайн)</label>
+      <label class="block text-sm font-bold text-gray-600">Дата начала</label>
+      <input
+          v-model="form.startDate"
+          type="date"
+          required
+          class="bg-white p-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-gray-600">Срок (дедлайн)</label>
       <input
           v-model="form.deadline"
           type="date"
           required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+          class="bg-white p-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
       />
     </div>
 
     <button
         type="submit"
-        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition"
+        class="w-full bg-green-600 hover:bg-green-700 hover:-translate-y-1.5 duration-700 text-white font-semibold py-2 px-4 rounded-md transition mt-3"
     >
-      Добавить задачу
+      Добавить
     </button>
   </form>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import { createTask } from '../api/tasks.js'
 // import { usePlannerStore } from '../store/usePlannerStore'
 // import { storeToRefs } from 'pinia'
@@ -68,11 +80,16 @@ import { createTask } from '../api/tasks.js'
 // const { users } = storeToRefs(store)
 const emit = defineEmits(['task-added'])
 
+//watch(() => props.users, (newVal) => {
+//  console.log('TaskForm получил новых юзеров:', newVal)
+//})
+
 const form = reactive({
   title: '',
   userIds: [],
   startDate: '',
   deadline: '',
+  hours: null,
 })
 
 
@@ -87,18 +104,27 @@ const handleSubmit = async () => {
   try {
     const res = await createTask({
       title: form.title,
-      userIds: form.userIds.map(u => u.id),
+      hours: form.hours,
+      userIds: form.userIds,
       startDate: form.startDate,
       deadline: form.deadline,
     })
 
     form.title = ''
+    form.hours = null
     form.userIds = []
     form.startDate = ''
     form.deadline = ''
+
     emit('task-added', res.data)
+    emit('update-users')
   } catch (err) {
     console.log(err)
   }
 }
 </script>
+<style scoped>
+.form {
+  background-color: #B2EDC5;
+}
+</style>

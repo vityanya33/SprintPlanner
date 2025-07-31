@@ -11,25 +11,67 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+//Структура необходимая для обработки рабочих часов каждого пользователя
+type UserWithLoad struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
+	Resource int    `json:"resource"`
+	Busy     int    `json:"busy"`
+	Free     int    `json:"free"`
+}
+
 // Get users
 func GetUsers(c *fiber.Ctx) error {
-	rows, err := db.Pool.Query(context.Background(), "SELECT id, name, role from users")
+	// Шаг 1: Получаем всех пользователей
+	rows, err := db.Pool.Query(context.Background(), `
+		SELECT id, name, role, resource
+		FROM users
+	`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
-	var users []models.User
+	var usersWithLoad []UserWithLoad
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Name, &user.Role); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Role, &user.Resource); err != nil {
 			return err
 		}
-		users = append(users, user)
+
+		// Шаг 2: Получаем суммарную загрузку (busy) по задачам
+		var busy int
+		err = db.Pool.QueryRow(
+			context.Background(),
+			`SELECT COALESCE(SUM(tasks.hours), 0)
+			 FROM task_users
+			 JOIN tasks ON tasks.id = task_users.task_id
+			 WHERE task_users.user_id = $1`, user.ID,
+		).Scan(&busy)
+		if err != nil {
+			return err
+		}
+
+		// Шаг 3: Считаем доступные часы
+		free := user.Resource - busy
+		if free < 0 {
+			free = 0 // чтобы не уйти в минус
+		}
+
+		// Шаг 4: Добавляем в массив
+		usersWithLoad = append(usersWithLoad, UserWithLoad{
+			ID:       user.ID,
+			Name:     user.Name,
+			Role:     user.Role,
+			Resource: user.Resource,
+			Busy:     busy,
+			Free:     free,
+		})
 	}
 
-	return c.JSON(users)
+	return c.JSON(usersWithLoad)
 }
 
 // GETUSER
@@ -44,9 +86,9 @@ func GetUserByID(c *fiber.Ctx) error {
 	var user models.User
 	err = db.Pool.QueryRow(
 		context.Background(),
-		"SELECT id, name, role FROM users WHERE id = $1",
+		"SELECT id, name, role, resource FROM users WHERE id = $1",
 		id,
-	).Scan(&user.ID, &user.Name, &user.Role)
+	).Scan(&user.ID, &user.Name, &user.Role, &user.Resource)
 
 	if err != nil {
 		return c.SendStatus(fiber.StatusNotFound)
@@ -69,8 +111,8 @@ func PatchUsers(c *fiber.Ctx) error {
 
 	err = db.Pool.QueryRow(
 		context.Background(),
-		"UPDATE users SET name = $1, role = $2 WHERE id = $3 RETURNING id, name, role",
-		user.Name, user.Role, id).Scan(&user.ID, &user.Name, &user.Role)
+		"UPDATE users SET name = $1, role = $2, resource = $3 WHERE id = $4 RETURNING id, name, role, resource",
+		user.Name, user.Role, user.Resource, id).Scan(&user.ID, &user.Name, &user.Role, &user.Resource)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("DB update failed")
@@ -88,10 +130,15 @@ func PostUsers(c *fiber.Ctx) error {
 		})
 	}
 
+	// Валидация
+	if user.Name == "" || user.Role == "" || user.Resource <= 0 {
+		return c.Status(fiber.StatusBadRequest).SendString("Missing required fields")
+	}
+
 	err := db.Pool.QueryRow(
 		context.Background(),
-		"INSERT INTO users (name, role) VALUES ($1, $2) RETURNING id",
-		user.Name, user.Role,
+		"INSERT INTO users (name, role, resource) VALUES ($1, $2, $3) RETURNING id",
+		user.Name, user.Role, user.Resource,
 	).Scan(&user.ID)
 
 	if err != nil {

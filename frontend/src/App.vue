@@ -1,20 +1,23 @@
 <template>
-  <div class="min-h-screen bg-gray-100 pt-5">
-    <div class="flex w-screen justify-between pb-10">
+  <div class="min-h-screen phone pt-5">
+    <div class="flex w-screen justify-between pb-10 shadow-2xl">
       <UserForm @user-added="handleUserAdded" />
       <UserList :users="users"
+                :tasks="tasks"
                 @user-updated="handleUserUpdated"
                 @user-removed="handleUserRemoved" />
     </div>
-    <div class="flex w-screen justify-between pb-10">
+    <div class="flex w-screen justify-between pb-10 shadow-2xl">
       <TaskForm
           :users="users"
-          @task-added="handleTaskAdded"/>
+          @task-added="handleTaskAdded"
+          @update-users="updateUsers"/>
       <TaskList
           :tasks="tasks"
           :users="users"
           @task-updated="handleTaskUpdated"
           @task-removed="handleTaskRemoved"
+          @update-users="updateUsers"/>
       />
     </div>
     <div>
@@ -31,7 +34,7 @@ import TaskList from './components/TaskList.vue'
 import SprintChart from './components/SprintChart.vue'
 import { ref, onMounted } from 'vue'
 import { getUsers } from './api/users.js'
-import { getTasks } from './api/tasks.js'
+import {getTasks, getTask, updateTask} from './api/tasks.js'
 
 //для загрузки людей с бэка
 const users = ref([])
@@ -63,14 +66,18 @@ const handleUserAdded = (newUser) => {
 }
 
 //обновить существующих
-const handleUserUpdated = (updatedUser) => {
-  const idx = users.value.findIndex(u => u.id === updatedUser.id)
-  if (idx !== -1) users.value[idx] = updatedUser
+const handleUserUpdated = async () => {
+  alert('Обновление пользователя!')
+  const res = await getUsers()
+  users.value = res.data
+  console.log('Пользователи обновлены:', users.value)
 }
 
+
 //убрать удаленного
-const handleUserRemoved = (removedId) => {
-  users.value = users.value.filter(u => u.id !== removedId)
+const handleUserRemoved = async () => {
+  const res = await getUsers()
+  users.value = res.data
 }
 
 //Задачи
@@ -82,13 +89,28 @@ const handleTaskAdded = (task) => {
 
 //обновить существующую задачу
 const handleTaskUpdated = (updatedTask) => {
-  const idx = tasks.value.findIndex(t => t.id === updatedTask.id)
-  if (idx !== -1) tasks.value[idx] = updatedTask
+  const index = tasks.value.findIndex(t => t.id === updatedTask.id)
+  if (index !== -1) {
+    tasks.value.splice(index, 1, { ...updatedTask })  // вот так нужно
+  }
+}
+//убрать удаленную задачу
+const handleTaskRemoved = async () => {
+  try {
+    const res = await getTasks()
+    tasks.value = res.data
+  } catch (err) {
+    console.error('Ошибка при удалении задачи:', err)
+  }
 }
 
-//убрать удаленную задачу
-const handleTaskRemoved = (removedId) => {
-  tasks.value = tasks.value.filter(t => t.id !== removedId)
+const updateUsers = async () => {
+  const res = await getUsers()
+  users.value = res.data
 }
 </script>
-
+<style scoped>
+.phone {
+  background-color: #E2DADB;
+}
+</style>

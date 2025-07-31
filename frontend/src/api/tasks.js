@@ -6,7 +6,9 @@ const API_URL = import.meta.env.VITE_API_URL + '/tasks'
 export const getTasks = async () => await axios.get(API_URL)
 export const getTask = async (id) => await axios.get(`${API_URL}/${id}`)
 export const createTask = async (task) => await axios.post(API_URL, task)
-export const updateTask = async (id, t) => {
-    await axios.patch(`${API_URL}/${id}`, t)
-    console.log(t) }
+export const updateTask = async (id, data) => {
+    console.log('ID задачи:', id)
+    console.log('Данные перед отправкой задачи: ', JSON.stringify(data, null, 2))
+    return await axios.patch(`${API_URL}/${id}`, data)
+}
 export const deleteTask = async (id) => await axios.delete(`${API_URL}/${id}`)

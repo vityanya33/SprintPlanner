@@ -14,7 +14,7 @@ import (
 func GetTasks(c *fiber.Ctx) error {
 	rows, err := db.Pool.Query(context.Background(), `
 		SELECT
-			t.id, t.title, t.start_date, t.deadline,
+			t.id, t.title, t.hours, t.start_date, t.deadline,
 			ARRAY_AGG(tu.user_id) AS user_ids
 		FROM tasks t
 		LEFT JOIN task_users tu ON t.id = tu.task_id
@@ -31,18 +31,20 @@ func GetTasks(c *fiber.Ctx) error {
 		var (
 			id       int
 			title    string
+			hours    int
 			start    time.Time
 			deadline time.Time
 			userIDs  []int
 		)
 
-		if err := rows.Scan(&id, &title, &start, &deadline, &userIDs); err != nil {
+		if err := rows.Scan(&id, &title, &hours, &start, &deadline, &userIDs); err != nil {
 			return err
 		}
 
 		tasks = append(tasks, models.Task{
 			ID:        id,
 			Title:     title,
+			Hours:     hours,
 			UserIDs:   userIDs, // массив ID
 			StartDate: start.Format("2006-01-02"),
 			Deadline:  deadline.Format("2006-01-02"),
@@ -71,14 +73,14 @@ func GetTaskByID(c *fiber.Ctx) error {
 	err = db.Pool.QueryRow(
 		context.Background(),
 		`SELECT
-			t.id, t.title, t.start_date, t.deadline,
+			t.id, t.hours, t.title, t.start_date, t.deadline,
 			ARRAY_AGG(tu.user_id) AS user_ids
 		FROM tasks t
 		LEFT JOIN task_users tu ON t.id = tu.task_id
 		WHERE t.id = $1
 		GROUP BY t.id`,
 		id,
-	).Scan(&task.ID, &task.Title, &start, &deadline, &task.UserIDs)
+	).Scan(&task.ID, &task.Title, &task.Hours, &start, &deadline, &task.UserIDs)
 
 	if err != nil {
 		return c.SendStatus(fiber.StatusNotFound)
@@ -98,15 +100,15 @@ func PostTasks(c *fiber.Ctx) error {
 	}
 
 	// Валидация
-	if task.Title == "" || len(task.UserIDs) == 0 || task.StartDate == "" || task.Deadline == "" {
+	if task.Title == "" || len(task.UserIDs) == 0 || task.StartDate == "" || task.Deadline == "" || task.Hours <= 0 {
 		return c.Status(fiber.StatusBadRequest).SendString("Missing required fields")
 	}
 
 	// Создание задачи
 	err := db.Pool.QueryRow(
 		context.Background(),
-		"INSERT INTO tasks (title, start_date, deadline) VALUES ($1, $2, $3) RETURNING id",
-		task.Title, task.StartDate, task.Deadline,
+		"INSERT INTO tasks (title, hours, start_date, deadline) VALUES ($1, $2, $3, $4) RETURNING id",
+		task.Title, task.Hours, task.StartDate, task.Deadline,
 	).Scan(&task.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to insert task")
@@ -144,8 +146,8 @@ func PatchTasks(c *fiber.Ctx) error {
 	// Обновление задачи
 	cmdTag, err := db.Pool.Exec(
 		context.Background(),
-		`UPDATE tasks SET title = $1, start_date = $2, deadline = $3 WHERE id = $4`,
-		task.Title, task.StartDate, task.Deadline, id,
+		`UPDATE tasks SET title = $1, hours= $2, start_date = $3, deadline = $4 WHERE id = $5`,
+		task.Title, task.Hours, task.StartDate, task.Deadline, id,
 	)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Update failed")

@@ -22,6 +22,14 @@ const props = defineProps({
   }
 })
 
+// Валидация — необязательно, но можно оставить для отладки
+if (!props.users || !Array.isArray(props.users) || !props.users.length) {
+  console.warn('Пустой список пользователей')
+}
+if (!props.tasks || !Array.isArray(props.tasks) || !props.tasks.length) {
+  console.warn('Пустой список задач')
+}
+
 const container = ref(null)
 let timeline = null
 
@@ -29,7 +37,8 @@ onMounted(() => {
   renderChart()
 })
 
-watch(() => props.tasks, renderChart, { deep: true })
+// Обновляем график при изменении задач или пользователей
+watch([() => props.tasks, () => props.users], renderChart, { deep: true })
 
 function renderChart() {
   if (!container.value) return
@@ -40,13 +49,14 @@ function renderChart() {
     content: user.name,
   }))
 
-  // Элементы — задачи, распределённые по всем назначенным пользователям
+  // Элементы — задачи, по каждому пользователю
   const itemsArray = []
   props.tasks.forEach(task => {
     const color = getRandomColor()
-    task.userIds.forEach(userId => {
+    const userIds = Array.isArray(task.userIds) ? task.userIds : []
+    userIds.forEach(userId => {
       itemsArray.push({
-        id: `${task.id}-${userId}`, // уникальный ID (иначе конфликт)
+        id: `${task.id}-${userId}`,
         group: userId,
         content: task.title,
         start: task.startDate,
@@ -76,10 +86,9 @@ function renderChart() {
   }
 }
 
-//Функция создания рандомных цветов для колонок
+// Генерация случайного цвета
 function getRandomColor() {
   const clr = Math.floor(Math.random() * 360)
   return `hsl(${clr}, 70%, 50%)`
 }
-
 </script>

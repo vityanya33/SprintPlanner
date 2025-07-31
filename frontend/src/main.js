@@ -5,6 +5,8 @@ import App from './App.vue'
 import './assets/main.css'
 
 import './assets/vis/vis-timeline.css'
+import 'vue-multiselect/dist/vue-multiselect.css'
+
 import Multiselect from 'vue-multiselect'
 // import router from './router'
 
