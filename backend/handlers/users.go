@@ -5,21 +5,11 @@ import (
 	"backend/models"
 	"context"
 	"strconv"
-
-	//"strconv"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/xuri/excelize/v2"
 )
-
-//Структура необходимая для обработки рабочих часов каждого пользователя
-type UserWithLoad struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Role     string `json:"role"`
-	Resource int    `json:"resource"`
-	Busy     int    `json:"busy"`
-	Free     int    `json:"free"`
-}
 
 // Get users
 func GetUsers(c *fiber.Ctx) error {
@@ -33,7 +23,7 @@ func GetUsers(c *fiber.Ctx) error {
 	}
 	defer rows.Close()
 
-	var usersWithLoad []UserWithLoad
+	var usersWithLoad []models.UserWithLoad
 
 	for rows.Next() {
 		var user models.User
@@ -61,7 +51,7 @@ func GetUsers(c *fiber.Ctx) error {
 		}
 
 		// Шаг 4: Добавляем в массив
-		usersWithLoad = append(usersWithLoad, UserWithLoad{
+		usersWithLoad = append(usersWithLoad, models.UserWithLoad{
 			ID:       user.ID,
 			Name:     user.Name,
 			Role:     user.Role,
@@ -168,4 +158,63 @@ func DeleteUsers(c *fiber.Ctx) error {
 		return c.SendStatus(404)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+//Загрузка пользователей с XLS и XLSX документов
+func UploadUsersXLS(c *fiber.Ctx) error {
+    //Получаем файл
+    fileHeader, err := c.FormFile("file")
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).SendString("File is required")
+    }
+
+    //Открываем файл
+    file, err := fileHeader.Open()
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).SendString("Failed to open file")
+    }
+    defer file.Close()
+
+    //Загружаем в excelize
+    f, err := excelize.OpenReader(file)
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).SendString("Invalid Excel format")
+    }
+    defer f.Close()
+
+    sheetName := f.GetSheetName(0)
+    rows, err := f.GetRows(sheetName)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).SendString("Failed to read sheet")
+    }
+
+    //Пропускаем заголовок
+    for i, row := range rows {
+        if i == 0 {
+            continue
+        }
+        if len(row) < 3 {
+            continue
+        }
+
+        resource, err := strconv.Atoi(row[2])
+        if err != nil {
+            continue
+        }
+
+        var id int64
+        err = db.Pool.QueryRow(
+            context.Background(),
+            "INSERT INTO users (name, role, resource) VALUES ($1, $2, $3) RETURNING id",
+            row[0], row[1], resource,
+        ).Scan(&id)
+        if err != nil {
+            fmt.Println("DB insert error:", err)
+            continue
+        }
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "message": "Users uploaded successfully",
+    })
 }

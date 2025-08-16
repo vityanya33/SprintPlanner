@@ -1,5 +1,5 @@
 <template>
-  <div class="form p-4 hover:scale-102 transition-transform duration-600 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-73 overflow-y-auto custom-scrollbar">
+  <div class="form p-4 hover:scale-102 transition-transform duration-600 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-[615px] overflow-y-auto scrollbar-custom">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Участники спринта</h2>
 
     <div v-if="users.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -30,7 +30,7 @@
           <input v-model="editResource" type="number" class="mb-2 w-full border rounded px-2 py-1" />
           <div class="flex gap-2">
             <button @click="confirmEdit(user.id)" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded duration-600">Сохранить</button>
-            <button @click="cancelEdit" class="bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded duration-600">Отмена</button>
+            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Отмена</button>
           </div>
         </div>
       </div>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref} from 'vue'
 import { updateUser, deleteUser} from '../api/users.js'
 //import axios from 'axios'
 
@@ -54,10 +54,6 @@ import { updateUser, deleteUser} from '../api/users.js'
 
 const props = defineProps({
   users: {
-    type: Array,
-    required: true,
-  },
-  tasks: {
     type: Array,
     required: true,
   }
@@ -113,5 +109,25 @@ const remove = async (id) => {
 <style scoped>
 .form {
   background-color: #FEEFE5;
+}
+</style>
+
+<style>
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #e58a62 #ffffff;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #e58a62;
+  border-radius: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background-color: #ffffff;
 }
 </style>

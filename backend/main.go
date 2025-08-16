@@ -34,15 +34,18 @@ func main() {
 	app.Get("/users", handlers.GetUsers)
 	app.Get("/users/:id", handlers.GetUserByID)
 	app.Post("/users", handlers.PostUsers)
+	app.Post("/users/upload", handlers.UploadUsersXLS)
 	app.Delete("/users/:id", handlers.DeleteUsers)
 	app.Patch("/users/:id", handlers.PatchUsers)
 
 	//Запросы по задачам
 	app.Get("/tasks", handlers.GetTasks)
+	app.Get("/tasks/available", handlers.GetAvailableUsers)
 	app.Get("/tasks/:id", handlers.GetTaskByID)
 	app.Post("/tasks", handlers.PostTasks)
 	app.Delete("/tasks/:id", handlers.DeleteTasks)
 	app.Patch("/tasks/:id", handlers.PatchTasks)
+	app.Patch("/tasks/:id/users", handlers.PatchTaskUsers)
 
 	// Запуск сервера
 	if err := app.Listen("0.0.0.0:3000"); err != nil {

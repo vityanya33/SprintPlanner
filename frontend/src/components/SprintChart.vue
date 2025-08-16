@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-10 bg-white rounded-xl shadow p-4 w-[95%] mx-auto">
+  <div class="mt-5 bg-white rounded-xl shadow p-4 w-[94%] mx-auto hover:scale-102 transition-transform duration-600 ml-15">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">График задач</h2>
     <div ref="container" class="overflow-x-auto"></div>
   </div>

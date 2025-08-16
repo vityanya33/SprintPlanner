@@ -1,8 +1,8 @@
 <template>
-  <div class="form p-4 rounded-xl hover:scale-102 transition-transform duration-600 shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-93 overflow-y-auto custom-scrollbar task">
+  <div class="form p-4 rounded-xl hover:scale-102 transition-transform duration-600 shadow-md space-y-4 mr-10 mx-auto mt-10 flex-1 w-[70%] h-[615px] overflow-y-auto scrollbar-custom-task">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Задачи</h2>
 
-    <div v-if="tasks && tasks.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div v-if="tasks && tasks.length" class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div
           v-for="task in props.tasks"
           :key="task.id"
@@ -28,9 +28,13 @@
 
           <input v-model="editHours" type="number" class="mb-2 w-full border rounded px-2 py-1" />
 
+          <div v-if="isLoadingUsers" class="text-sm text-gray-500 italic">
+            Загрузка пользователей...
+          </div>
+
           <select multiple v-model="editUserIds" class="mb-2 w-full border rounded px-2 py-1">
             <option v-for="user in props.users" :key="user.id" :value="user.id">
-              {{ user.name }}
+              {{ user.name }} (свободно: {{ user.free }} ч)
             </option>
           </select>
 
@@ -38,8 +42,8 @@
           <input v-model="editDeadline" type="date" class="mb-2 w-full border rounded px-2 py-1" />
 
           <div class="flex gap-2">
-            <button @click="confirmEdit" class="bg-blue-500 text-white px-3 py-1 rounded">Сохранить</button>
-            <button @click="cancelEdit" class="bg-gray-300 px-3 py-1 rounded">Отмена</button>
+            <button @click="confirmEdit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded duration-600">Сохранить</button>
+            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Отмена</button>
           </div>
         </div>
       </div>
@@ -59,6 +63,10 @@ import { updateTask, deleteTask } from '../api/tasks.js'
 // const store = usePlannerStore()
 // const { tasks, users } = storeToRefs(store)
 
+const isLoadingUsers = ref(false)
+
+
+//Пропсы
 const props = defineProps({
   tasks: {
     type: Array,
@@ -103,7 +111,7 @@ const formatDate = (dateStr) => {
 
 
 //Для изменения задач
-const startEdit = (task) => {
+const startEdit = async (task) => {
   editingId.value = task.id
   editTitle.value = task.title
   editHours.value = task.hours
@@ -159,5 +167,24 @@ const remove = async(id) => {
 <style scoped>
 .form {
   background-color: #D6F6DD;
+}
+</style>
+<style>
+.scrollbar-custom-task {
+  scrollbar-width: thin;
+  scrollbar-color: #337a20 #ffffff;
+}
+
+.scrollbar-custom-task::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-custom-task::-webkit-scrollbar-thumb {
+  background-color: #174b10;
+  border-radius: 8px;
+}
+
+.scrollbar-custom-task::-webkit-scrollbar-track {
+  background-color: #ffffff;
 }
 </style>
