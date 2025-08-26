@@ -1,33 +1,69 @@
 SprintPlanner/
-├── backend/                             # Backend на Go
-│   ├── Dockerfile                       # Dockerfile для backend
-│   ├── main.go                          # Запуск Fiber-сервера
-│   ├── go.mod
+├── backend/                             			# Backend на Go
+│   ├── .idea/                           			# Конфигурация IDE
 │   ├── db/
-│   │   └── db.go                        # Подключение к PostgreSQL
+│   │   └── db.go                        			# Подключение к PostgreSQL
+│   ├── docs/                            			# Документация backend(Swagger)
 │   ├── handlers/
-│   │   ├── users.go                     # CRUD endpoints
-│   │   └── tasks.go
+│   │   ├── user_handler.go              		    # Обработчики пользователей (CRUD)
+│   │   └── task_handler.go              		    # Обработчики задач (CRUD)
 │   ├── models/
-│   │   ├── user.go                      # Структура User
-│   │   └── task.go                      # Структура Task
+│   │   ├── user.go                      			# Структура User
+│   │   ├── user_with_load.go            		    # Расширенная структура User с нагрузкой
+│   │   └── tasks.go                    			# Структура Task
+│   ├── repositories/
+│   │   ├── user_repository.go           		    # Репозиторий пользователей (работа с БД)
+│   │   └── task_repository.go           		    # Репозиторий задач (работа с БД)
+│   ├── services/
+│   │   ├── user_service.go              		    # Сервис пользователей (бизнес-логика)
+│   │   └── task_service.go              		    # Сервис задач (бизнес-логика)
+│   ├── .gitignore
+│   ├── Dockerfile                       			# Docker контейнер для backend
+│   ├── go.mod
+│   ├── go.sum
+│   └── main.go                          			# Запуск Fiber-сервера
 │
-├── frontend/                            # Frontend на Vue
-│   ├── Dockerfile                       # Dockerfile для frontend
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── package.json
-│   └── src/
-│       ├── App.vue
-│       ├── main.js
-│       ├── assets/
-│       ├── store/
-│       │   └── usePlannerStore.js      # Pinia store (отключен при БД)
-│       ├── components/
-│       │   ├── UserForm.vue            # Форма добавления участника
-│       │   ├── UserList.vue            # Список участников
-│       │   ├── TaskForm.vue            # Форма добавления задачи
-│       │   ├── TaskList.vue            # Список задач
-│       │   └── SprintChart.vue         # График задач
+├── frontend/                            			# Frontend на Vue 3
+│   ├── node_modules/                    		    # Зависимости npm (автогенерируемая)
+│   ├── public/                          			# Статические файлы (иконки, favicon)
+│   ├── src/
+│   │   ├── api/                         			# API слои для работы с backend
+│   │   │   ├── tasks.js                 			# API методы для задач
+│   │   │   └── users.js                 			# API методы для пользователей
+│   │   ├── assets/                      
+│   │   ├── components/                 
+│   │   │   ├── AppMenu.vue              		    # Главное меню навигации
+│   │   │   ├── BoardStatic.vue          		    # Доска задач(Drag&Drop)
+│   │   │   ├── SprintChart.vue          		    # График спринта (распределение задач)
+│   │   │   ├── TaskCard.vue             		    # Карточка задачи (отдельный элемент)
+│   │   │   ├── TaskForm.vue            		    # Форма создания задачи
+│   │   │   ├── TaskList.vue             			# Список задач
+│   │   │   ├── UserForm.vue             		    # Форма создания пользователя
+│   │   │   └── UserList.vue             		    # Список пользователей
+│   │   ├── pages/                     
+│   │   │   ├── Home.vue                 			# Главная страница
+│   │   │   ├── Tasks.vue               			# Страница управления задачами
+│   │   │   └── Users.vue                			# Страница управления пользователями
+│   │   ├── router/                      			# Маршрутизация (Vue Router)
+│   │   │   └── index.js         
+│   │   ├── App.vue                      			# Корневой компонент приложения
+│   │   ├── main.js                      			# Точка входа приложения
+│   │   └── .env                        			# Переменные окружения
+│   ├── .gitignore
+│   ├── Dockerfile                       			# Docker контейнер для frontend
+│   ├── index.html                       
+│   ├── package.json                     
+│   ├── package-lock.json               
+│   ├── postcss.config.js              
+│   ├── tailwind.config.js               
+│   └── vite.config.js                   
 │
-├── docker-compose.yml                  # Docker Compose для всех сервисов
+├── init/                          
+│   ├── 01-create-tables.sql           		        # SQL скрипт создания таблиц
+│   └── sprintplanner_dump.backup       		    # Дамп базы данных
+│
+├── documents/                           			# Дополнительные документы
+├── .gitignore
+├── desktop.ini
+├── docker-compose.yml                  		    # Docker Compose для всех сервисов
+└── README.md

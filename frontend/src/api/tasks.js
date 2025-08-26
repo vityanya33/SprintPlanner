@@ -20,8 +20,6 @@ export const getAvailableUsers = async (startDate, deadline, hours) => {
         console.log('Отправляем параметры:', startDate, deadline, hours)
         return await axios.get(`${API_URL}/available`, {
             params: {
-                start_date: startDate,
-                deadline: deadline,
                 hours: hours
             }
         })

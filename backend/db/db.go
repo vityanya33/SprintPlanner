@@ -14,6 +14,7 @@ var Pool *pgxpool.Pool
 func InitDB() error {
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
+		// Для Docker-среды используем host=db вместо localhost
 		dbUrl = "postgres://postgres:admin123@localhost:5432/sprintplanner?sslmode=disable"
 	}
 

@@ -44,10 +44,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /users/:id :
+
+  /users/upload:
+    post:
+      summary: "Метод для загрузки пользователей из XLS файла"
+      description: "Метод выполняет массовое добавление пользователей из Excel файла"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: "Пользователи успешно загружены из файла"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersList'
+        '400':
+          description: "Ошибка при обработке файла"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
     get:
       summary: "Метод для получения одного пользователя"
       description: "Метод выполняет запрос на вывод пользователя по его ID который присутствует в БД"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       responses:
         '200':
           description: "Успешный ответ по запросу пользователя"
@@ -64,6 +106,13 @@ paths:
     patch:
       summary: "Метод для изменения пользователя"
       description: "Метод выполняет запрос на изменение пользователя по его ID который присутствует в БД"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       requestBody:
         required: true
         content:
@@ -86,6 +135,13 @@ paths:
     delete:
       summary: "Метод для удаления пользователя"
       description: "Метод выполняет запрос на удаление пользователя по его ID который присутствует в БД"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       responses:
         '200':
           description: "Пользователь успешно удален"
@@ -136,10 +192,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /tasks/:id:
+  /tasks/available:
+    get:
+      summary: "Метод для получения доступных пользователей"
+      description: "Метод возвращает список пользователей с их текущей нагрузкой для распределения задач"
+      responses:
+        '200':
+          description: "Успешный ответ со списком доступных пользователей"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableUsersList'
+        '500':
+          description: "Запрос завершен с ошибкой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{id}:
     get:
       summary: "Метод для получения задачи по ID"
       description: "Метод выполняет запрос на получение задачи по её ID из БД"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       responses:
         '200':
           description: "Успешный ответ по запросу задачи"
@@ -156,6 +237,13 @@ paths:
     patch:
       summary: "Метод для изменения задачи"
       description: "Метод выполняет запрос на изменение задачи по её ID"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       requestBody:
         required: true
         content:
@@ -178,11 +266,67 @@ paths:
     delete:
       summary: "Метод для удаления задачи"
       description: "Метод выполняет запрос на удаление задачи по её ID"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       responses:
         '200':
           description: "Задача успешно удалена"
         '404':
           description: "Задача не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{id}/users:
+    patch:
+      summary: "Метод для изменения назначения пользователя на задачу (Drag & Drop)"
+      description: "Метод выполняет переназначение пользователя на задачу для функционала Drag & Drop"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  example: 2
+              required:
+                - user_id
+      responses:
+        '200':
+          description: "Пользователь успешно назначен на задачу"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskOverview'
+        '400':
+          description: "Некорректный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Задача или пользователь не найдены"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Внутренняя ошибка сервера"
           content:
             application/json:
               schema:
@@ -276,7 +420,6 @@ components:
           type: string
           format: date
           example: 2025-07-15
-
     TasksList:
       type: object
       properties:
@@ -287,7 +430,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TasksOverview'
-
     TaskRequest:
       type: object
       required:
@@ -310,6 +452,34 @@ components:
           type: string
           format: date
           example: 2025-07-15
+    AvailableUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Иван Иванов
+        role:
+          type: string
+          example: Фронтендер
+        current_load:
+          type: integer
+          example: 3
+        max_load:
+          type: integer
+          example: 5
+    AvailableUsersList:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 5
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailableUser'
     Error:
       type: object
       properties:

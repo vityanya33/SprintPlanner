@@ -1,33 +1,33 @@
-services:
+version: '3.8'
 
+services:
   db:
-    image: postgres
+    image: postgres:15
     restart: always
-    # set shared memory limit when using docker compose
     shm_size: 128mb
-    # or set shared memory limit when deploy via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
     environment:
-      POSTGRES_HOST: db
       POSTGRES_USER: postgres
-      POSTGRES_DB: sprintplanner
       POSTGRES_PASSWORD: admin123
-      POSTGRES_PORT: 5432
+      POSTGRES_DB: sprintplanner
     ports:
       - "5432:5432"
-    volumes:
-      - ./init:/docker-entrypoint-initdb.d
-
+    networks:
+      - sprintplanner-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   adminer:
     image: adminer
     restart: always
     ports:
       - "8080:8080"
+    networks:
+      - sprintplanner-net
+    depends_on:
+      - db
 
   backend:
     build: ./backend
@@ -35,14 +35,23 @@ services:
       - "3000:3000"
     volumes:
       - ./backend/docs:/app/docs
+    environment:
+      - DATABASE_URL=postgres://postgres:admin123@db:5432/sprintplanner?sslmode=disable
+    networks:
+      - sprintplanner-net
     depends_on:
-      - db
-    env_file:
-      - ./backend/.env
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
     ports:
       - "5173:80"
+    networks:
+      - sprintplanner-net
     depends_on:
       - backend
+
+networks:
+  sprintplanner-net:
+    driver: bridge
