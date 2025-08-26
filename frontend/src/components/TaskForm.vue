@@ -37,7 +37,7 @@
               :close-on-select="false"
               :clear-on-select="false"
               :preserve-search="true"
-              :custom-label="u => `${u.name} (${u.free ?? '-'}ч свободно)`"
+              :custom-label="u => `${u.name} (${u.free ?? '-'} свободно)`"
               placeholder="Выберите участника"
               label="name"
               track-by="id"
@@ -46,7 +46,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-bold text-gray-600">Оценка в часах</label>
+          <label class="block text-sm font-bold text-gray-600">Оценка задачи (ресурс)</label>
           <input
               v-model="form.hours"
               type="number"

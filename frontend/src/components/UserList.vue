@@ -14,8 +14,8 @@
           <p class="text-sm text-gray-600">
             🎓 Роль: {{ user.role }}<br />
             ⏱️ Рабочий ресурс: {{ user.resource }}<br />
-            ⏱️ Занято часов: {{ user.busy }}<br />
-            ⏱️ Свободно часов: {{ user.free }}
+            ⏱️ Занято: {{ user.busy }}<br />
+            ⏱️ Свободно: {{ user.free }}
           </p>
 
           <div class="absolute top-2 right-2 space-x-2">

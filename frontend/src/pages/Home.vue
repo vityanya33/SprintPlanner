@@ -15,23 +15,6 @@
   <!-- D&D доска -->
   <BoardStatic :users="users" :tasks="tasks" @tasks-updated="tasks = $event" />
 
-  <!-- Списки пользователей и задач -->
-  <div class="flex w-screen justify-between pb-10 shadow-2xl">
-    <UserList
-        :users="users"
-        @user-updated="updateUsers"
-        @user-removed="updateUsers"
-        @update-users="updateUsers"
-    />
-    <TaskList
-        :tasks="tasks"
-        :users="users"
-        @task-updated="updateTasks"
-        @task-removed="updateTasks"
-        @update-tasks="updateTasks"
-    />
-  </div>
-
   <!-- Адрес для страницы -->
   <router-view />
 </template>

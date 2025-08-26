@@ -1,38 +1,45 @@
 <template>
-  <div class="mt-5 rounded-xl shadow p-4 w-[94%] mx-auto hover:scale-102 transition-transform duration-600 ml-15 bg-amber-50">
+  <div
+      class="mt-5 rounded-xl shadow p-4 w-[94%] mx-auto hover:scale-102 transition-transform duration-600 ml-15 bg-amber-50">
     <h2 class="text-xl font-semibold mb-4 text-gray-700">Drag&Drop</h2>
-    <div class="flex gap-5 items-start">
-      <!-- Свободные задачи -->
-      <div class="bg-gray-200 rounded-xl p-4 w-60 min-h-[320px] shadow-md">
-        <h3 class="text-center text-gray-700 font-semibold mb-3">Свободные задачи</h3>
-        <draggable
-            :list="lists[0]"
-            :group="{ name: 'tasks', pull: true, put: true }"
-            item-key="id"
-            :data-userid="0"
-            @add="onAdd"
-            @end="onEnd"
-            @change="onChangeLog"
-            class="space-y-2"
-        >
-          <template #item="{ element }">
-            <div
-                class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing"
-                :data-id="element.id"
-            >
-              {{ element.title }}
-            </div>
-          </template>
-        </draggable>
-      </div>
 
-      <!-- Колонки пользователей -->
+    <!-- Свободные задачи (горизонтально) -->
+    <div class="bg-gray-200 rounded-xl p-4 shadow-md mb-6">
+      <h3 class="text-center text-gray-700 font-semibold mb-3">Свободные задачи</h3>
+      <draggable
+          :list="lists[0]"
+          :group="{ name: 'tasks', pull: true, put: true }"
+          item-key="id"
+          :data-userid="0"
+          @add="onAdd"
+          @end="onEnd"
+          @change="onChangeLog"
+          class="flex gap-3 overflow-x-auto pb-2"
+      >
+        <template #item="{ element }">
+          <div
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing min-w-[140px] text-center"
+              :data-id="element.id"
+          >
+            <h1> Задача: {{ element.title }}</h1>
+            <p>Оценка: {{ element.hours }}</p>
+          </div>
+        </template>
+      </draggable>
+    </div>
+
+    <!-- Колонки пользователей (в ряд со скроллом) -->
+    <div class="flex gap-5 items-start overflow-x-auto pb-2 scrollbar-custom-DaD">
       <div
           v-for="user in users"
           :key="user.id"
-          class="bg-pink-50 rounded-xl p-4 w-60 min-h-[320px] shadow-md"
+          class="bg-pink-50 rounded-xl p-4 w-60 min-h-[320px] shadow-md flex-shrink-0"
       >
-        <h3 class="text-center text-gray-700 font-semibold mb-3">{{ user.name }}</h3>
+        <h3 class="font-semibold text-gray-700 mb-3 text-center">{{ user.name }}</h3>
+        <div class="flex justify-between mb-3">
+          <p class="text-green-600 ml-2">Свободно:{{ user.free }}</p>
+          <p class="text-red-800 mr-2">Занято:{{ user.busy }}</p>
+        </div>
         <draggable
             :list="lists[user.id]"
             :group="{ name: 'tasks', pull: true, put: true }"
@@ -45,10 +52,11 @@
         >
           <template #item="{ element }">
             <div
-                class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing"
+                class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing min-w-[140px] text-center"
                 :data-id="element.id"
             >
-              {{ element.title }}
+              <h1>Задача: {{ element.title }}</h1>
+              <p>Оценка: {{ element.hours }}</p>
             </div>
           </template>
         </draggable>
@@ -59,15 +67,15 @@
 
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import {ref, watch, onMounted} from 'vue'
 import draggable from 'vuedraggable'
-import { setTaskUsers } from '../api/tasks'
+import {setTaskUsers} from '../api/tasks'
 
 // ===== props / emits =====
 const props = defineProps({
-  users: { type: Array, default: () => [] },
+  users: {type: Array, default: () => []},
   // task: { id, title, startDate, deadline, userIds: number[] }
-  tasks: { type: Array, default: () => [] }
+  tasks: {type: Array, default: () => []}
 })
 const emit = defineEmits(['tasks-updated'])
 
@@ -104,7 +112,7 @@ function buildListsFromProps(reason = 'init') {
 watch(
     () => [props.users, props.tasks],
     () => buildListsFromProps('props changed'),
-    { deep: true, immediate: true }
+    {deep: true, immediate: true}
 )
 
 onMounted(() => {
@@ -216,60 +224,10 @@ function onEnd(evt) {
 }
 </script>
 
-
-<style scoped>
-.board-form {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  margin-left: 15px;
-  background: linear-gradient(135deg, #f9fafb, #eef2f7);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  align-items: flex-start;
-  transition: all 0.3s ease;
+<style>
+.scrollbar-custom-DaD {
+  scrollbar-width: thin;
+  scrollbar-color: #bcb2cb #ece4e4;
 }
 
-.column {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 14px;
-  width: 240px;
-  min-height: 320px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.column:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
-}
-
-.column-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-.task-card {
-  background: #fdfdfd;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-  cursor: grab;
-  transition: all 0.2s ease;
-}
-
-.task-card:hover {
-  transform: translateY(-2px);
-  background: #f0f9ff;
-  border-color: #bae6fd;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-}
-
-.task-card:active { cursor: grabbing; }
 </style>

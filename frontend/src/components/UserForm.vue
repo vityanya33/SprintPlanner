@@ -31,7 +31,7 @@
                  placeholder="Разработчик"/>
         </div>
         <div>
-          <label class="block text-sm font-bold text-gray-600">Ресурс в часах</label>
+          <label class="block text-sm font-bold text-gray-600">Рабочий ресурс</label>
           <input v-model.trim="form.resource" type="number" min="1"
                  class="bg-white mt-1 block w-full rounded-md text-emerald-700 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2"
                  placeholder="100"/>

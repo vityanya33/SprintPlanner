@@ -13,7 +13,7 @@
           <h3 class="text-lg font-bold text-gray-800">{{ task.title }}</h3>
           <p class="text-sm text-gray-600">
             👤 Участники: {{ getUserNames(task.userIds) }}<br />
-            ⏱️ Количество часов на выполнение: {{ task.hours }}<br />
+            ⏱️ Оценка задачи: {{ task.hours }}<br />
             📅 Срок: {{ formatDate(task.startDate) }} - {{ formatDate(task.deadline) }}
           </p>
           <div class="absolute top-2 right-2 space-x-2">
