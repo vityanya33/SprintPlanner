@@ -1,6 +1,6 @@
 <template>
   <div class="form p-4 rounded-xl hover:scale-102 transition-transform duration-600 shadow-md space-y-4 mr-10 mx-auto mt-10 flex-1 w-[70%] h-[615px] overflow-y-auto scrollbar-custom-task">
-    <h2 class="text-xl font-semibold mb-4 text-gray-700">Задачи</h2>
+    <h2 class="text-xl font-semibold mb-4 text-gray-700">Tasks</h2>
 
     <div v-if="tasks && tasks.length" class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div
@@ -12,9 +12,9 @@
         <div v-if="editingId !== task.id">
           <h3 class="text-lg font-bold text-gray-800">{{ task.title }}</h3>
           <p class="text-sm text-gray-600">
-            👤 Участники: {{ getUserNames(task.userIds) }}<br />
-            ⏱️ Оценка задачи: {{ task.hours }}<br />
-            📅 Срок: {{ formatDate(task.startDate) }} - {{ formatDate(task.deadline) }}
+            👤 Users: {{ getUserNames(task.userIds) }}<br />
+            ⏱️ Task evaluation: {{ task.hours }}<br />
+            📅 Term: {{ formatDate(task.startDate) }} - {{ formatDate(task.deadline) }}
           </p>
           <div class="absolute top-2 right-2 space-x-2">
             <button @click="startEdit(task)" class="text-sm transition-transform duration-300 hover:scale-200">✏️</button>
@@ -29,12 +29,12 @@
           <input v-model="editHours" type="number" class="mb-2 w-full border rounded px-2 py-1" />
 
           <div v-if="isLoadingUsers" class="text-sm text-gray-500 italic">
-            Загрузка пользователей...
+            Uploading users...
           </div>
 
           <select multiple v-model="editUserIds" class="mb-2 w-full border rounded px-2 py-1">
             <option v-for="user in props.users" :key="user.id" :value="user.id">
-              {{ user.name }} (свободно: {{ user.free }} ч)
+              {{ user.name }} (free: {{ user.free }} ч)
             </option>
           </select>
 
@@ -42,14 +42,14 @@
           <input v-model="editDeadline" type="date" class="mb-2 w-full border rounded px-2 py-1" />
 
           <div class="flex gap-2">
-            <button @click="confirmEdit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded duration-600">Сохранить</button>
-            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Отмена</button>
+            <button @click="confirmEdit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded duration-600">Save</button>
+            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <p v-else class="text-gray-500 italic">Нет задач</p>
+    <p v-else class="text-gray-500 italic">No tasks</p>
   </div>
 </template>
 
@@ -90,7 +90,7 @@ const getUserNames = (ids) => {
   if (!Array.isArray(ids)) return '—'
   return ids.map(id => {
         const user = props.users.find(u => u.id === id)
-        return user ? user.name : '❌Удален'
+        return user ? user.name : '❌Deleted'
       })
       .join(', ')
 }
@@ -123,7 +123,7 @@ const startEdit = async (task) => {
 const confirmEdit = async () => {
   const task = props.tasks.find(t => t.id === editingId.value)
   if (!task) {
-    console.error('Не найдена задача с таким ID:', editingId.value)
+    console.error('No task with this ID was found:', editingId.value)
     return
   }
 
@@ -155,7 +155,7 @@ const cancelEdit = () => {
 
 //для удаления задачи
 const remove = async(id) => {
-  if (!confirm('Удалить задачу?')) return
+  if (!confirm('Delete task?')) return
   try {
     await deleteTask(id)
     emit('task-removed', id)

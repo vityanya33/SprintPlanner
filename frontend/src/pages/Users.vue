@@ -1,7 +1,7 @@
 <template>
   <!-- Заголовок -->
   <h1 class="text-4xl font-extrabold uppercase tracking-widest text-lime-600 drop-shadow ml-25">
-    Пользователи
+    Users
   </h1>
 
   <!-- Бургер-меню -->
@@ -59,9 +59,9 @@ const updateUsers = async () => {
   try {
     const res = await getUsers()
     users.value = res.data
-    console.log('Пользователи обновлены:', users.value)
+    console.log('Users updated:', users.value)
   } catch (err) {
-    console.error('Ошибка при загрузке пользователей:', err)
+    console.error('Error with loading users:', err)
   }
 }
 </script>

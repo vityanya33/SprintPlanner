@@ -5,7 +5,7 @@
 
     <!-- Свободные задачи (горизонтально) -->
     <div class="bg-gray-200 rounded-xl p-4 shadow-md mb-6">
-      <h3 class="text-center text-gray-700 font-semibold mb-3">Свободные задачи</h3>
+      <h3 class="text-center text-gray-700 font-semibold mb-3">Free tasks</h3>
       <draggable
           :list="lists[0]"
           :group="{ name: 'tasks', pull: true, put: true }"
@@ -21,8 +21,8 @@
               class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing min-w-[140px] text-center"
               :data-id="element.id"
           >
-            <h1> Задача: {{ element.title }}</h1>
-            <p>Оценка: {{ element.hours }}</p>
+            <h1>Task: {{ element.title }}</h1>
+            <p>Evaluation: {{ element.hours }}</p>
           </div>
         </template>
       </draggable>
@@ -37,8 +37,8 @@
       >
         <h3 class="font-semibold text-gray-700 mb-3 text-center">{{ user.name }}</h3>
         <div class="flex justify-between mb-3">
-          <p class="text-green-600 ml-2">Свободно:{{ user.free }}</p>
-          <p class="text-red-800 mr-2">Занято:{{ user.busy }}</p>
+          <p class="text-green-600 ml-2">Free: {{ user.free }}</p>
+          <p class="text-red-800 mr-2">Busy: {{ user.busy }}</p>
         </div>
         <draggable
             :list="lists[user.id]"
@@ -55,8 +55,8 @@
                 class="bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm cursor-grab transition hover:bg-blue-50 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing min-w-[140px] text-center"
                 :data-id="element.id"
             >
-              <h1>Задача: {{ element.title }}</h1>
-              <p>Оценка: {{ element.hours }}</p>
+              <h1>Task: {{ element.title }}</h1>
+              <p>Evaluation: {{ element.hours }}</p>
             </div>
           </template>
         </draggable>
@@ -133,7 +133,7 @@ function onChangeLog(evt) {
       console.log('event.removed:', evt.removed)
     }
     if (evt?.moved) {
-      console.log('event.moved (внутри одной колонки):', evt.moved)
+      console.log('event.moved (inside one column):', evt.moved)
     }
   } finally {
     console.groupEnd()
@@ -168,7 +168,7 @@ async function onAdd(evt) {
     console.log('task at newIndex:', task)
 
     if (!task) {
-      console.warn('❗ Не нашли задачу в целевом списке — странно. Прерываю.')
+      console.warn('❗ Didn\'t find the task in the target list. Interrupting.')
       return
     }
 
@@ -177,20 +177,20 @@ async function onAdd(evt) {
 
     // Если «перенесли» в ту же колонку — ничего не делаем (только порядок поменяли)
     if (currentPrimary === newUserId) {
-      console.log('Перенос внутри той же колонки — пропускаю обновление БД.')
+      console.log('Transferring within the same column - skips DB update.')
       return
     }
 
     // 1) локально обновляем userIds (график и доска увидят изменение сразу)
     task.userIds = newUserId === 0 ? [] : [newUserId]
-    console.log('Обновил task.userIds локально:', task.userIds)
+    console.log('Updated task.userIds locally:', task.userIds)
 
     // 2) сохраняем в БД
     try {
       await setTaskUsers(task.id, task.userIds)
       console.log(`✅ DB sync ok: task #${task.id} -> user_ids = [${task.userIds.join(',')}]`)
     } catch (err) {
-      console.error('❌ DB sync failed, откатываю визуально в прежний список', err)
+      console.error('❌ DB sync failed, I visually roll back to the previous list', err)
 
       // Откат (возвращаем задачу в старую колонку)
       // Удаляем из нового места
@@ -204,7 +204,7 @@ async function onAdd(evt) {
       return
     }
 
-    // 3) уведомим родителя (если он захочет перезагрузиться)
+    // уведомим родителя (если он захочет перезагрузиться)
     emit('tasks-updated', [...props.tasks])
   } finally {
     console.groupEnd()

@@ -2,7 +2,7 @@
   <div
       class="mt-5 bg-white rounded-xl shadow p-4 w-[94%] mx-auto hover:scale-102 transition-transform duration-600 ml-15"
   >
-    <h2 class="text-xl font-semibold mb-4 text-gray-700">График задач</h2>
+    <h2 class="text-xl font-semibold mb-4 text-gray-700">Task schedule</h2>
     <div ref="container" class="overflow-x-auto"></div>
   </div>
 </template>
@@ -79,6 +79,7 @@ function renderChart() {
       item: 20,
       axis: 40,
     },
+    locale: "en",
     groupTemplate: function (group) {
       const el = document.createElement("span");
       el.textContent = group.name;

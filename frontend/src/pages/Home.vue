@@ -1,7 +1,7 @@
 <template>
   <!-- Заголовок -->
   <h1 class="text-4xl font-extrabold uppercase tracking-widest text-lime-600 drop-shadow ml-25">
-    Главная
+    Main
   </h1>
 
   <!-- Бургер-меню -->

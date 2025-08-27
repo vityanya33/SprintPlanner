@@ -1,7 +1,7 @@
 <template>
   <!-- Заголовок -->
   <h1 class="text-4xl font-extrabold uppercase tracking-widest text-lime-600 drop-shadow ml-25">
-    Задачи
+    Tasks
   </h1>
 
   <!-- Бургер-меню -->
@@ -59,17 +59,17 @@ const updateTasks = async () => {
   try {
     const resUsers = await getUsers()
     users.value = resUsers.data
-    console.log('Пользователи обновлены:', users.value)
+    console.log('Users updated:', users.value)
   } catch (err) {
-    console.error('Ошибка при загрузке пользователей:', err)
+    console.error('Error loading users:', err)
   }
 
   try {
     const resTasks = await getTasks()
     tasks.value = resTasks.data
-    console.log('Задачи обновлены:', tasks.value)
+    console.log('Tasks updated:', tasks.value)
   } catch (err) {
-    console.error('Ошибка при загрузке задач:', err)
+    console.error('Errors with loading tasks:', err)
   }
 }
 </script>

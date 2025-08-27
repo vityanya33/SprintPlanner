@@ -48,7 +48,7 @@ func (r *TaskRepositoryImpl) GetAllTasks(ctx context.Context) ([]models.Task, er
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
-		log.Printf("🔴 Error querying tasks: %v", err)
+		log.Printf("Error querying tasks: %v", err)
 		return nil, fmt.Errorf("error querying tasks: %w", err)
 	}
 	defer rows.Close()
@@ -57,7 +57,7 @@ func (r *TaskRepositoryImpl) GetAllTasks(ctx context.Context) ([]models.Task, er
 	for rows.Next() {
 		var task models.Task
 		if err := rows.Scan(&task.ID, &task.Title, &task.Hours, &task.StartDate, &task.Deadline, &task.UserIDs); err != nil {
-			log.Printf("🔴 Error scanning task: %v", err)
+			log.Printf("Error scanning task: %v", err)
 			return nil, fmt.Errorf("error scanning task: %w", err)
 		}
 		tasks = append(tasks, task)

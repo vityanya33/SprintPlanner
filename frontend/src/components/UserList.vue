@@ -1,6 +1,6 @@
 <template>
   <div class="form p-4 hover:scale-102 transition-transform duration-600 rounded-xl shadow-md space-y-4 ml-15 mr-10 mx-auto mt-10 flex-1 w-[70%] h-[615px] overflow-y-auto scrollbar-custom">
-    <h2 class="text-xl font-semibold mb-4 text-gray-700">Участники спринта</h2>
+    <h2 class="text-xl font-semibold mb-4 text-gray-700">Sprint participants</h2>
 
     <div v-if="users.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
@@ -12,10 +12,10 @@
           <p class="text-xs text-gray-400">ID: {{ user.id }}</p>
           <h3 class="text-lg font-bold text-gray-800">{{ user.name }}</h3>
           <p class="text-sm text-gray-600">
-            🎓 Роль: {{ user.role }}<br />
-            ⏱️ Рабочий ресурс: {{ user.resource }}<br />
-            ⏱️ Занято: {{ user.busy }}<br />
-            ⏱️ Свободно: {{ user.free }}
+            🎓 Role: {{ user.role }}<br />
+            ⏱️ Working resource: {{ user.resource }}<br />
+            ⏱️ Busy: {{ user.busy }}<br />
+            ⏱️ Free: {{ user.free }}
           </p>
 
           <div class="absolute top-2 right-2 space-x-2">
@@ -29,14 +29,14 @@
           <input v-model="editRole" class="mb-2 w-full border rounded px-2 py-1" />
           <input v-model="editResource" type="number" class="mb-2 w-full border rounded px-2 py-1" />
           <div class="flex gap-2">
-            <button @click="confirmEdit(user.id)" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded duration-600">Сохранить</button>
-            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Отмена</button>
+            <button @click="confirmEdit(user.id)" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded duration-600">Save</button>
+            <button @click="cancelEdit" class="bg-red-400 hover:bg-red-500 px-3 py-1 rounded duration-600">Cancel</button>
           </div>
         </div>
       </div>
     </div>
 
-    <p v-else class="text-gray-500 italic">Нет участников</p>
+    <p v-else class="text-gray-500 italic">No participants</p>
   </div>
 </template>
 
@@ -96,7 +96,7 @@ const cancelEdit = () => {
 
 //для удаления пользователя
 const remove = async (id) => {
-  if (!confirm('Удалить пользователя? ')) return
+  if (!confirm('Delete user? ')) return
   try {
     await deleteUser(id)
     emit('user-removed', id)

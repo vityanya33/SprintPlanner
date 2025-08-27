@@ -8,8 +8,6 @@ export const getTasks = async () => await axios.get(API_URL)
 export const getTask = async (id) => await axios.get(`${API_URL}/${id}`)
 export const createTask = async (task) => await axios.post(API_URL, task)
 export const updateTask = async (id, data) => {
-    console.log('ID задачи:', id)
-    console.log('Данные перед отправкой задачи: ', JSON.stringify(data, null, 2))
     return await axios.patch(`${API_URL}/${id}`, data)
 }
 export const deleteTask = async (id) => await axios.delete(`${API_URL}/${id}`)
@@ -17,14 +15,13 @@ export const deleteTask = async (id) => await axios.delete(`${API_URL}/${id}`)
 //функции для загрузки доступных пользователей
 export const getAvailableUsers = async (startDate, deadline, hours) => {
     try {
-        console.log('Отправляем параметры:', startDate, deadline, hours)
         return await axios.get(`${API_URL}/available`, {
             params: {
                 hours: hours
             }
         })
     } catch (err) {
-        console.error('Ошибка при получении доступных пользователей:', err)
+        console.error('Error getting available users:', err)
         throw err
     }
 }

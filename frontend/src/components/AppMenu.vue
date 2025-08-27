@@ -25,27 +25,27 @@
           v-if="isOpen"
           class="fixed top-0 left-0 w-72 h-full bg-gradient-to-br from-white to-gray-100 shadow-2xl z-50 p-6 flex flex-col gap-6 rounded-tr-2xl rounded-br-2xl"
       >
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">📋 Меню</h2>
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">📋 Menu</h2>
         <router-link
             to="/"
             @click="closeMenu"
             class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-lime-100 hover:text-lime-800 font-medium text-gray-700"
         >
-          🏠 Главная
+          🏠 Main
         </router-link>
         <router-link
             to="/users"
             @click="closeMenu"
             class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-lime-100 hover:text-lime-800 font-medium text-gray-700"
         >
-          👥 Пользователи
+          👥 Users
         </router-link>
         <router-link
             to="/tasks"
             @click="closeMenu"
             class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-lime-100 hover:text-lime-800 font-medium text-gray-700"
         >
-          📜 Задачи
+          📜 Tasks
         </router-link>
         <div class="mt-auto mb-0 text-sm text-gray-400"> © SprintPlanner 2025 created by Vitek</div>
       </aside>
