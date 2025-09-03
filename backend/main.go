@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 
+	"backend/client/jira"
 	"backend/db"
 	"backend/handlers"
 	"backend/repositories"
@@ -52,7 +54,23 @@ func main() {
 	taskRepo := repositories.NewTaskRepository()
 
 	userService := services.NewUserService(userRepo)
-	taskService := services.NewTaskService(taskRepo)
+
+	// Initialize Jira client from environment
+	jiraBaseURL := os.Getenv("JIRA_BASE_URL")
+	jiraToken := os.Getenv("JIRA_API_TOKEN")
+	var jiraClient *jira.Client
+	if jiraBaseURL != "" && jiraToken != "" {
+		c, err := jira.NewJiraClient(jiraBaseURL, jiraToken)
+		if err != nil {
+			log.Printf("⚠️ Failed to initialize Jira client: %v", err)
+		} else {
+			jiraClient = c
+		}
+	} else {
+		log.Println("⚠️ JIRA_BASE_URL or JIRA_API_TOKEN not set - Jira sync disabled")
+	}
+
+	taskService := services.NewTaskService(taskRepo, jiraClient)
 
 	// Инициализируем хендлеры с сервисами
 	userHandler := handlers.NewUserHandler(userService)
@@ -73,6 +91,8 @@ func main() {
 	app.Patch("/users/:id", userHandler.PatchUsers)
 
 	//Запросы по задачам
+	// Важно: специфичный маршрут ставим до динамического "/tasks/:id", чтобы избежать 405
+	app.Post("/tasks/jira", taskHandler.SyncTasksWithJira)
 	app.Get("/tasks", taskHandler.GetTasks)
 	app.Get("/tasks/available", taskHandler.GetAvailableUsers)
 	app.Get("/tasks/:id", taskHandler.GetTaskByID)

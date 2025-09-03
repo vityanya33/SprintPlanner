@@ -105,19 +105,21 @@
       >
         <h2 class="text-xl font-semibold text-gray-700">Import tasks from Jira</h2>
         <div>
-          <label class="block text-sm font-bold text-gray-600">Task UUIDs (comma separated)</label>
+          <label class="block text-sm font-bold text-gray-600">Jira Query</label>
           <textarea
-              v-model="jiraUUIDs"
+              v-model="jiraJQL"
               class="bg-white p-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-              placeholder="e.g. 123e4567-e89b-12d3-a456-426614174000, 223e4567-e89b-12d3-a456-426614174111"
+              placeholder="project = ABC AND status = 'In Progress'"
               required
           ></textarea>
         </div>
         <button
             type="submit"
             class="w-full bg-blue-600 hover:bg-blue-700 hover:-translate-y-1.5 duration-700 text-white font-semibold py-2 px-4 rounded-md transition mt-3"
+            :disabled="isJiraLoading"
         >
-          Import
+          <span v-if="!isJiraLoading">Import</span>
+          <span v-else>Loading...</span>
         </button>
       </form>
     </transition>
@@ -126,7 +128,7 @@
 
 <script setup>
 import {reactive, ref, watch, onMounted} from 'vue'
-import {createTask, getAvailableUsers} from '../api/tasks.js'
+import {createTask, getAvailableUsers, syncTasksWithJira, getTasks} from '../api/tasks.js'
 import {getUsers} from '../api/users.js'
 
 const allUsers = ref([])
@@ -147,7 +149,8 @@ const form = reactive({
   hours: null,
 })
 
-const jiraUUIDs = ref('')
+const jiraJQL = ref('')
+const isJiraLoading = ref(false)
 
 const props = defineProps({
   users: {
@@ -209,25 +212,14 @@ const handleSubmit = async () => {
 const handleJiraSubmit = async () => {
   isJiraLoading.value = true
   try {
-    const uuids = jiraUUIDs.value.split(',').map(u => u.trim())
-
-    // 🔹 Фейковый "запрос"
-    setTimeout(() => {
-      const mockTasks = uuids.map((id, idx) => ({
-        id,
-        title: `Imported Jira Task #${idx + 1}`,
-        hours: 8,
-        userIds: [],
-        startDate: '2025-08-27',
-        deadline: '2025-09-01',
-      }))
-      emit('task-added', mockTasks)
-      emit('update-users')
-      jiraUUIDs.value = ''
-      isJiraLoading.value = false
-    }, 1500) // имитация задержки
+    await syncTasksWithJira(jiraJQL.value)
+    // после синхронизации обновляем списки
+    emit('task-added')
+    emit('update-users')
+    jiraJQL.value = ''
   } catch (err) {
     console.log('Error importing Jira tasks', err)
+  } finally {
     isJiraLoading.value = false
   }
 }

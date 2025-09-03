@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type TaskHandler struct {
@@ -29,12 +28,11 @@ func (h *TaskHandler) GetTasks(c *fiber.Ctx) error {
 // GET one task
 func (h *TaskHandler) GetTaskByID(c *fiber.Ctx) error {
 	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
+	if idStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid task ID"})
 	}
 
-	task, err := h.taskService.GetTaskByID(c.Context(), id)
+	task, err := h.taskService.GetTaskByID(c.Context(), idStr)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -67,8 +65,7 @@ func (h *TaskHandler) PostTasks(c *fiber.Ctx) error {
 // PATCH task
 func (h *TaskHandler) PatchTasks(c *fiber.Ctx) error {
 	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
+	if idStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid task ID"})
 	}
 
@@ -77,23 +74,22 @@ func (h *TaskHandler) PatchTasks(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
-	if err := h.taskService.UpdateTask(c.Context(), id, &task); err != nil {
+	if err := h.taskService.UpdateTask(c.Context(), idStr, &task); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	task.ID = id
+	task.ID = idStr
 	return c.Status(fiber.StatusOK).JSON(task)
 }
 
 // DELETE task
 func (h *TaskHandler) DeleteTasks(c *fiber.Ctx) error {
 	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
+	if idStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid task ID"})
 	}
 
-	if err := h.taskService.DeleteTask(c.Context(), id); err != nil {
+	if err := h.taskService.DeleteTask(c.Context(), idStr); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -121,11 +117,9 @@ func (h *TaskHandler) GetAvailableUsers(c *fiber.Ctx) error {
 // PATCH для задач с drag & drop
 func (h *TaskHandler) PatchTaskUsers(c *fiber.Ctx) error {
 	idStr := c.Params("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
+	if idStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid task ID"})
 	}
-
 	var payload struct {
 		UserIDs []int `json:"user_ids"`
 	}
@@ -133,9 +127,23 @@ func (h *TaskHandler) PatchTaskUsers(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
 	}
 
-	if err := h.taskService.UpdateTaskUsers(c.Context(), id, payload.UserIDs); err != nil {
+	if err := h.taskService.UpdateTaskUsers(c.Context(), idStr, payload.UserIDs); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.SendStatus(fiber.StatusOK)
+}
+
+func (h *TaskHandler) SyncTasksWithJira(c *fiber.Ctx) error {
+	var payload struct {
+		JQL string `json:"jql"`
+	}
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
+	}
+	jql := payload.JQL
+	if jql == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "JQL is required"})
+	}
+	return h.taskService.SyncTasksWithJira(c.Context(), jql)
 }

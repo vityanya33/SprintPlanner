@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"bytes"
 	"context"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -19,7 +20,7 @@ func (m *mockTaskService) GetAllTasks(ctx context.Context) ([]models.Task, error
 	return []models.Task{}, nil
 }
 
-func (m *mockTaskService) GetTaskByID(ctx context.Context, id uuid.UUID) (*models.Task, error) {
+func (m *mockTaskService) GetTaskByID(ctx context.Context, id string) (*models.Task, error) {
 	return &models.Task{}, nil
 }
 
@@ -27,11 +28,11 @@ func (m *mockTaskService) CreateTask(ctx context.Context, task *models.Task) err
 	return nil
 }
 
-func (m *mockTaskService) UpdateTask(ctx context.Context, id uuid.UUID, task *models.Task) error {
+func (m *mockTaskService) UpdateTask(ctx context.Context, id string, task *models.Task) error {
 	return nil
 }
 
-func (m *mockTaskService) DeleteTask(ctx context.Context, id uuid.UUID) error {
+func (m *mockTaskService) DeleteTask(ctx context.Context, id string) error {
 	return nil
 }
 
@@ -39,7 +40,11 @@ func (m *mockTaskService) GetAvailableUsers(ctx context.Context, hours int) ([]m
 	return []models.UserWithLoad{}, nil
 }
 
-func (m *mockTaskService) UpdateTaskUsers(ctx context.Context, taskID uuid.UUID, userIDs []int) error {
+func (m *mockTaskService) UpdateTaskUsers(ctx context.Context, taskID string, userIDs []int) error {
+	return nil
+}
+
+func (m *mockTaskService) SyncTasksWithJira(ctx context.Context, jql string) error {
 	return nil
 }
 
@@ -78,6 +83,8 @@ func TestPostTasks(t *testing.T) {
 	body := `{
 	"title": "Creating app",
 	"hours": 10,
+	"startDate": "2025-01-01",
+	"deadline": "2025-01-02",
 	"user_ids": [1, 2, 3]
 	}`
 
@@ -85,7 +92,10 @@ func TestPostTasks(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := app.Test(req, -1)
 	assert.NoError(t, err)
-	assert.Equal(t, 201, resp.StatusCode)
+	assert.Equal(t, 201, resp.StatusCode, func() string {
+		body, _ := io.ReadAll(resp.Body)
+		return string(body)
+	}())
 }
 
 func TestPatchTask(t *testing.T) {
