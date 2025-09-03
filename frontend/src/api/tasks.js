@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL + '/tasks'
 export const getTasks = async () => await axios.get(API_URL)
 export const getTask = async (id) => await axios.get(`${API_URL}/${id}`)
 export const createTask = async (task) => await axios.post(API_URL, task)
+export const syncTasksWithJira = async (jql) => await axios.post(`${API_URL}/jira`, { jql })
 export const updateTask = async (id, data) => {
     return await axios.patch(`${API_URL}/${id}`, data)
 }

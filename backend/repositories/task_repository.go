@@ -15,11 +15,12 @@ import (
 
 type TaskRepository interface {
 	GetAllTasks(ctx context.Context) ([]models.Task, error)
-	GetTaskByID(ctx context.Context, id uuid.UUID) (*models.Task, error)
+	GetTaskByID(ctx context.Context, id string) (*models.Task, error)
 	CreateTask(ctx context.Context, task *models.Task) error
-	UpdateTask(ctx context.Context, id uuid.UUID, task *models.Task) error
-	DeleteTask(ctx context.Context, id uuid.UUID) error
-	UpdateTaskUsers(ctx context.Context, taskID uuid.UUID, userIDs []int) error
+	BulkCreateOrUpdateTasks(ctx context.Context, tasks []models.Task) error
+	UpdateTask(ctx context.Context, id string, task *models.Task) error
+	DeleteTask(ctx context.Context, id string) error
+	UpdateTaskUsers(ctx context.Context, taskID string, userIDs []int) error
 	GetAvailableUsers(ctx context.Context) ([]models.UserWithLoad, error)
 }
 
@@ -65,7 +66,7 @@ func (r *TaskRepositoryImpl) GetAllTasks(ctx context.Context) ([]models.Task, er
 	return tasks, nil
 }
 
-func (r *TaskRepositoryImpl) GetTaskByID(ctx context.Context, id uuid.UUID) (*models.Task, error) {
+func (r *TaskRepositoryImpl) GetTaskByID(ctx context.Context, id string) (*models.Task, error) {
 	query := `
 		SELECT 
 			t.id, 
@@ -101,9 +102,13 @@ func (r *TaskRepositoryImpl) CreateTask(ctx context.Context, task *models.Task) 
 	}
 	defer tx.Rollback(ctx)
 
+	if task.ID == "" {
+		task.ID = uuid.New().String()
+	}
+
 	// Создаем задачу с генерацией UUID
-	query := `INSERT INTO tasks (title, hours, start_date, deadline) VALUES ($1, $2, $3, $4) RETURNING id`
-	err = tx.QueryRow(ctx, query, task.Title, task.Hours, task.StartDate, task.Deadline).Scan(&task.ID)
+	query := `INSERT INTO tasks (id, title, hours, start_date, deadline) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	err = tx.QueryRow(ctx, query, task.ID, task.Title, task.Hours, task.StartDate, task.Deadline).Scan(&task.ID)
 	if err != nil {
 		return fmt.Errorf("error creating task: %w", err)
 	}
@@ -119,7 +124,72 @@ func (r *TaskRepositoryImpl) CreateTask(ctx context.Context, task *models.Task) 
 	return tx.Commit(ctx)
 }
 
-func (r *TaskRepositoryImpl) UpdateTask(ctx context.Context, id uuid.UUID, task *models.Task) error {
+func (r *TaskRepositoryImpl) BulkCreateOrUpdateTasks(ctx context.Context, tasks []models.Task) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	batch := &pgx.Batch{}
+	hasUpserts := false
+	for _, t := range tasks {
+		if t.ID != "" {
+			hasUpserts = true
+			batch.Queue(
+				`INSERT INTO tasks (id, title, hours, start_date, deadline)
+				 VALUES ($1, $2, $3, $4, $5)
+				 ON CONFLICT (id) DO UPDATE SET
+				   title = EXCLUDED.title,
+				   hours = EXCLUDED.hours,
+				   start_date = EXCLUDED.start_date,
+				   deadline = EXCLUDED.deadline,
+				   updated_at = CURRENT_TIMESTAMP`,
+				t.ID, t.Title, t.Hours, t.StartDate, t.Deadline,
+			)
+		}
+	}
+
+	if hasUpserts {
+		br := tx.SendBatch(ctx, batch)
+		for i := 0; i < batch.Len(); i++ {
+			if _, err := br.Exec(); err != nil {
+				br.Close()
+				return fmt.Errorf("error executing upsert batch: %w", err)
+			}
+		}
+		if err := br.Close(); err != nil {
+			return fmt.Errorf("error closing upsert batch: %w", err)
+		}
+	}
+
+	rows := make([][]interface{}, 0)
+	for _, t := range tasks {
+		if t.ID == "" {
+			t.ID = uuid.New().String()
+			rows = append(rows, []interface{}{t.Title, t.Hours, t.StartDate, t.Deadline})
+		}
+	}
+	if len(rows) > 0 {
+		_, err = tx.CopyFrom(
+			ctx,
+			pgx.Identifier{"tasks"},
+			[]string{"title", "hours", "start_date", "deadline"},
+			pgx.CopyFromRows(rows),
+		)
+		if err != nil {
+			return fmt.Errorf("error bulk inserting tasks: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *TaskRepositoryImpl) UpdateTask(ctx context.Context, id string, task *models.Task) error {
 	query := `UPDATE tasks SET title = $1, hours = $2, start_date = $3, deadline = $4 WHERE id = $5`
 	result, err := r.pool.Exec(ctx, query, task.Title, task.Hours, task.StartDate, task.Deadline, id)
 	if err != nil {
@@ -133,7 +203,7 @@ func (r *TaskRepositoryImpl) UpdateTask(ctx context.Context, id uuid.UUID, task 
 	return nil
 }
 
-func (r *TaskRepositoryImpl) DeleteTask(ctx context.Context, id uuid.UUID) error {
+func (r *TaskRepositoryImpl) DeleteTask(ctx context.Context, id string) error {
 	query := `DELETE FROM tasks WHERE id = $1`
 	result, err := r.pool.Exec(ctx, query, id)
 	if err != nil {
@@ -147,7 +217,7 @@ func (r *TaskRepositoryImpl) DeleteTask(ctx context.Context, id uuid.UUID) error
 	return nil
 }
 
-func (r *TaskRepositoryImpl) UpdateTaskUsers(ctx context.Context, taskID uuid.UUID, userIDs []int) error {
+func (r *TaskRepositoryImpl) UpdateTaskUsers(ctx context.Context, taskID string, userIDs []int) error {
 	// Начинаем транзакцию
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -172,7 +242,7 @@ func (r *TaskRepositoryImpl) UpdateTaskUsers(ctx context.Context, taskID uuid.UU
 	return tx.Commit(ctx)
 }
 
-func (r *TaskRepositoryImpl) updateTaskUsers(ctx context.Context, tx pgx.Tx, taskID uuid.UUID, userIDs []int) error {
+func (r *TaskRepositoryImpl) updateTaskUsers(ctx context.Context, tx pgx.Tx, taskID string, userIDs []int) error {
 	valueStrings := make([]string, 0, len(userIDs))
 	valueArgs := make([]interface{}, 0, len(userIDs)*2)
 

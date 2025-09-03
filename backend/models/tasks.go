@@ -2,18 +2,17 @@ package models
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"time"
 )
 
 type Task struct {
-	ID        uuid.UUID `json:"id"`      //ID задачи
-	Title     string    `json:"title"`   //Описание задачи
-	Hours     int       `json:"hours"`   //Оценка задачи в часах
-	UserIDs   []int     `json:"userIds"` //Список ID пользователей
+	ID      string `json:"id"`      //ID задачи
+	Title   string `json:"title"`   //Описание задачи
+	Hours   int    `json:"hours"`   //Оценка задачи в часах
+	UserIDs []int  `json:"userIds"` //Список ID пользователей
 
-	StartDate time.Time `json:"-"`       //Дата начала (исключаем из JSON)
-	Deadline  time.Time `json:"-"`       //Дата дедлайн (исключаем из JSON)
+	StartDate time.Time `json:"-"` //Дата начала (исключаем из JSON)
+	Deadline  time.Time `json:"-"` //Дата дедлайн (исключаем из JSON)
 }
 
 // MarshalJSON кастомная сериализация в JSON

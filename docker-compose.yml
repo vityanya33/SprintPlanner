@@ -37,6 +37,8 @@ services:
       - ./backend/docs:/app/docs
     environment:
       - DATABASE_URL=postgres://postgres:admin123@db:5432/sprintplanner?sslmode=disable
+      - JIRA_BASE_URL=<jira_base_url>
+      - JIRA_API_TOKEN=<personal_access_token>
     networks:
       - sprintplanner-net
     depends_on:
